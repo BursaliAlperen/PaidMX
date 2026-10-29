@@ -17,3 +17,45 @@
 .ton-wallet p{color:var(--muted);overflow-wrap:anywhere;line-height:1.5;margin:0 0 16px}
 .ton-wallet .subtle{display:block;color:var(--muted);font-size:10px;line-height:1.5;margin-top:12px}
 .ton-badge{width:46px;height:46px;display:grid;place-items:center;border-radius:15px;background:#0098ea;color:white;font-weight:950;font-size:13px;letter-spacing:-.05em;box-shadow:0 8px 20px #0098ea30}
+
+/* PaidMX web launch polish: desktop layouts, reduced motion and accessible focus */
+.boot-label{margin:0;color:var(--muted);font-size:12px;font-weight:650;letter-spacing:.02em}
+@media(min-width:760px){
+  html,body{min-height:100%;background:radial-gradient(ellipse at 50% 0%,#dfe4f0 0,transparent 52%),#eef0f5}
+  .app-shell{max-width:1180px;min-height:100vh;background:var(--page);box-shadow:0 0 90px rgba(17,17,25,.08)}
+  .onboard{padding:30px 48px 42px}
+  .welcome-card{width:min(100%,760px);min-height:550px;margin:44px auto 18px;padding:48px 58px}
+  .welcome-card .intro{max-width:390px}
+  .heading,.language-grid,.theme-grid,.sticky{width:min(100%,900px);margin-left:auto;margin-right:auto}
+  .heading{margin-top:52px}
+  .language-grid,.theme-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+  .language{min-height:88px;padding:15px}
+  .theme-preview{height:110px}
+  .dashboard{max-width:1120px;margin:0 auto;padding:28px 34px 50px}
+  .dashboard-header{max-width:1050px;margin:0 auto 14px;padding-bottom:22px}
+  .dashboard-header .brand-mark{width:44px;height:44px}
+  .page{max-width:900px;margin:0 auto}
+  .profile{margin-bottom:22px}
+  .balance{padding:28px 30px 24px}
+  .amount strong{font-size:54px}
+  .surface{padding:22px}
+  .quick-grid{gap:12px}
+  .quick-grid button{min-height:124px}
+  .quick-grid b{font-size:12px}
+  .bottom-nav{width:min(600px,calc(100% - 40px));bottom:18px;padding:8px}
+  .nav-item{padding:10px 4px}
+  .nav-item span{font-size:11px}
+  .subpage{padding-top:22px}
+  .title-row{margin-bottom:28px}
+  .empty,.invite-card,.arcade,.wallet-card{padding:30px}
+  .ton-wallet{padding:26px}
+}
+@media(min-width:1050px){
+  .dashboard{padding-left:48px;padding-right:48px}
+  .page:not(.subpage){max-width:980px}
+  .balance{border-radius:30px}
+  .welcome-card{min-height:590px}
+}
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+}
