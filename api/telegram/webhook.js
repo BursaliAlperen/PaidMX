@@ -46,6 +46,10 @@ export default async function handler(req, res) {
     let selectedLang = existing[0] && existing[0].language ? existing[0].language : lang;
     let referrerId = referrer ? referrer[1] : null;
     if (referrerId === String(tg.id)) referrerId = null;
+    if (referrerId) {
+      const validReferrer = await sql`SELECT telegram_id FROM paidmx_users WHERE telegram_id = ${referrerId} LIMIT 1`;
+      if (!validReferrer.length) referrerId = null;
+    }
     await sql`INSERT INTO paidmx_users (telegram_id, username, first_name, language, referrer_telegram_id)
       VALUES (${String(tg.id)}, ${typeof tg.username === "string" ? tg.username.slice(0,64) : null},
         ${typeof tg.first_name === "string" ? tg.first_name.slice(0,128) : ""}, ${selectedLang}, ${referrerId})
