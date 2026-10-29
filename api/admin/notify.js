@@ -1,3 +1,4 @@
+import { withStormkitCompat } from "../../lib/stormkit-compat.js";
 import { getDb } from "../../lib/db.js";
 import { readCookie, verifySession } from "../../lib/session.js";
 
@@ -12,7 +13,7 @@ async function sendTelegram(chatId, message) {
   if(!r.ok||!data.ok) throw new Error("Telegram message delivery failed");
   return data.result;
 }
-export default async function handler(req,res) {
+async function handler(req,res) {
   if(req.method!=="POST"){res.setHeader("Allow","POST");return res.status(405).json({error:"Method not allowed"});}
   const session=verifySession(readCookie(req.headers.cookie,"paidmx_session"),process.env.SESSION_SECRET);
   if(!session||!adminIds().has(session.userId))return res.status(403).json({error:"Admin access required"});
@@ -53,3 +54,5 @@ export default async function handler(req,res) {
     return res.status(503).json({error:"Could not record the event. Check database migration and bot configuration."});
   }
 }
+
+export default withStormkitCompat(handler);
