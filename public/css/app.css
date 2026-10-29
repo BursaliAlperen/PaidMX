@@ -11,3 +11,9 @@
 [dir=rtl] .language,[dir=rtl] .invite-card,[dir=rtl] .setting-row{text-align:right}[dir=rtl] .language>i{right:auto;left:8px}
 @media(min-width:540px){body{background:#e9e9ec}.app-shell{box-shadow:0 0 60px #0001}.onboard{padding-left:27px;padding-right:27px}}
 @media(max-width:365px){.onboard{padding-left:15px;padding-right:15px}.dashboard{padding-left:10px;padding-right:10px}.balance{padding:18px 15px}.amount strong{font-size:39px}.quick-grid{gap:4px}.quick-grid button{min-height:104px}.quick-grid b{font-size:9px}.language{padding:9px;gap:7px}.language b{font-size:11px}}
+
+.ton-wallet{margin:14px 0;padding:20px;border:1px solid var(--line);border-radius:22px;box-shadow:var(--shadow)}
+.ton-wallet h2{font-size:18px;letter-spacing:-.04em;margin:12px 0 6px}
+.ton-wallet p{color:var(--muted);overflow-wrap:anywhere;line-height:1.5;margin:0 0 16px}
+.ton-wallet .subtle{display:block;color:var(--muted);font-size:10px;line-height:1.5;margin-top:12px}
+.ton-badge{width:46px;height:46px;display:grid;place-items:center;border-radius:15px;background:#0098ea;color:white;font-weight:950;font-size:13px;letter-spacing:-.05em;box-shadow:0 8px 20px #0098ea30}
