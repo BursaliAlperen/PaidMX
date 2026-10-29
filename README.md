@@ -18,7 +18,7 @@ The interface is original and borrows only the broad design language of modern r
 ## Stack
 
 - Static frontend: HTML, CSS and JavaScript
-- Serverless API: Vercel Functions, Node.js 20+
+- Serverless API: Stormkit Cloud Node.js functions in the top-level `api/` directory, with `lib/stormkit-compat.js` adapting native Node request/response objects
 - Telegram identity: server-side Telegram Mini App initData HMAC validation and automatic signed-session restore
 - TON wallet UI: TON Connect UI with a host-aware serverless manifest endpoint
 - Storage: PostgreSQL via Neon serverless driver
@@ -37,9 +37,11 @@ Opening the static HTML as a file is for UI preview only; API authentication and
 ## Telegram setup
 
 1. Configure your bot with BotFather and set the deployed HTTPS Mini App URL.
-2. Add `BOT_TOKEN`, `SESSION_SECRET` and `DATABASE_URL` as server-side Vercel environment variables.
-3. Run the database schema once.
-4. Deploy and configure the bot's Menu Button / Mini App URL.
+2. In Stormkit, open **PaidMX → production → Config → Environment Variables** and add `BOT_TOKEN`, `ADMIN_IDS`, `SESSION_SECRET`, `DATABASE_URL`, `PUBLIC_APP_URL` and `TELEGRAM_WEBHOOK_SECRET`. Add `PAYMENT_WEBHOOK_SECRET` only if configuring the normalized payment-event endpoint.
+3. Run `database/schema.sql`, then `database/migration-001-referrals-admin.sql` against the same PostgreSQL database.
+4. Deploy the app and set the Telegram bot's Menu Button / Mini App URL to `PUBLIC_APP_URL`.
+5. Register the Telegram webhook once from a trusted terminal where `BOT_TOKEN`, `PUBLIC_APP_URL` and `TELEGRAM_WEBHOOK_SECRET` are available:
+   `curl -X POST "https://api.telegram.org/bot${BOT_TOKEN}/setWebhook" -d "url=${PUBLIC_APP_URL}/api/telegram/webhook" -d "secret_token=${TELEGRAM_WEBHOOK_SECRET}"`
 
 Never put the bot token or database URL into frontend code or commit real secrets.
 
@@ -68,7 +70,7 @@ The operational scaffold adds these routes:
 ### Required setup
 
 1. Apply `database/schema.sql`, then run `database/migration-001-referrals-admin.sql` against the same PostgreSQL database.
-2. Configure server-side environment variables: `BOT_TOKEN`, `SESSION_SECRET` (32+ characters), `DATABASE_URL`, `TELEGRAM_WEBHOOK_SECRET`, `PUBLIC_APP_URL`, and `ADMIN_TELEGRAM_IDS` (comma-separated numeric Telegram IDs). Never expose these values in frontend code.
+2. Configure server-side environment variables: `BOT_TOKEN`, `SESSION_SECRET` (32+ characters), `DATABASE_URL`, `TELEGRAM_WEBHOOK_SECRET`, `PUBLIC_APP_URL`, and `ADMIN_IDS` (comma-separated numeric Telegram IDs). Never expose these values in frontend code.
 3. Configure the Telegram webhook using a random secret token. Example from a trusted terminal where the environment variables are set:
    ```sh
    curl -X POST "https://api.telegram.org/bot${BOT_TOKEN}/setWebhook" \
