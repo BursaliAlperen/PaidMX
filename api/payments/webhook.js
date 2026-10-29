@@ -56,7 +56,7 @@ export default async function handler(req,res) {
     catch(e){errorText=String(e.message||"Telegram delivery failed").slice(0,300);}
     await sql`INSERT INTO paidmx_notifications (telegram_id,kind,message,status,telegram_message_id,error,sent_at)
       VALUES (${telegramId},${eventType},${message},${delivery},${messageId},${errorText},CASE WHEN ${delivery}='sent' THEN NOW() ELSE NULL END)`;
-    const adminIds=String(process.env.ADMIN_TELEGRAM_IDS||"").split(",").map(x=>x.trim()).filter(x=>/^\d+$/.test(x));
+    const adminIds=String(process.env.ADMIN_IDS||process.env.ADMIN_TELEGRAM_IDS||"").split(",").map(x=>x.trim()).filter(x=>/^\d+$/.test(x));
     await Promise.all(adminIds.map(async id=>{try{await telegram("sendMessage",{chat_id:id,text:"PaidMX payment event: "+eventType+"\nUser: "+telegramId+"\nAmount: "+amount+" "+currency+"\nProvider event: "+eventId,disable_web_page_preview:true});}catch(e){console.error("Admin payment alert failed:",e?.message||"unknown");}}));
     return res.status(200).json({ok:true,eventId:inserted[0].id,notification:delivery});
   }catch(error){console.error("PaidMX payment webhook:",error?.message||"unknown");return res.status(503).json({error:"Payment event could not be recorded"});}
