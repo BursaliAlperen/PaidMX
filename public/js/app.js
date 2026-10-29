@@ -27,7 +27,7 @@ const WORDS = {
   zh:{welcome:"欢迎使用",tagline:"观看 · 游戏 · 赚取",intro:"任务、小游戏和奖励，一站式体验。",start:"开始使用",language:"选择语言",languageNote:"之后可以在设置中更改。",continue:"继续",theme:"选择界面风格",themeNote:"选择你喜欢的配色。",enter:"进入 PaidMX",back:"返回",home:"首页",tasks:"任务",arena:"竞技场",invites:"邀请",wallet:"钱包",total:"总余额",points:"积分",convert:"兑换",withdraw:"提现",daily:"每日签到",streak:"连续天数",promo:"有优惠码吗？",spin:"转盘",play:"游戏",redeem:"兑换",invite:"邀请好友",live:"进行中",openTasks:"开放任务",allTasks:"全部任务",watch:"观看",ad:"激励视频",adNote:"连接广告平台后即可启用奖励。",soon:"即将推出",walletNote:"奖励功能启用后会显示余额。",inviteTitle:"邀请朋友",inviteNote:"你的专属 Telegram 邀请链接",copy:"复制链接",copied:"已复制",preview:"预览模式",settings:"设置",changeLanguage:"更改语言",changeTheme:"更改主题",error:"无法保存设置，请重试。",promoNote:"奖励系统配置完成后将启用优惠码。",arenaNote:"小游戏正在准备中。",withdrawNote:"提现功能尚未启用。",noRewards:"暂无可用奖励",member:"PaidMX 用户"}
 };
 
-let s = { step:"welcome", language:"en", theme:"midnight", page:"home", user:null, authenticated:false, preview:true, settings:false };
+let s = { step:"welcome", language:"en", theme:"midnight", page:"home", user:null, authenticated:false, preview:true, settings:false, wallet:null, tonUI:null };
 
 function tr(key) { return (WORDS[s.language] && WORDS[s.language][key]) || WORDS.en[key] || key; }
 function safe(value) { return String(value == null ? "" : value).replace(/[&<>"']/g, function(c){return ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"})[c];}); }
@@ -74,7 +74,18 @@ function toast(message) {
 }
 async function init() {
   if (TG) { try { TG.ready(); TG.expand(); } catch {} }
-  if (TG && TG.initData) {
+  let restored = false;
+  try {
+    const response = await fetch("/api/me", { method:"GET", credentials:"same-origin", headers:{ "Accept":"application/json" } });
+    if (response.ok) {
+      const data = await response.json();
+      if (data.authenticated && data.user) {
+        s.authenticated=true; s.preview=false; s.user=data.user; restored=true;
+        if (data.user.language && data.user.theme) { s.language=data.user.language; s.theme=data.user.theme; s.step="app"; }
+      }
+    }
+  } catch {}
+  if (!restored && TG && TG.initData) {
     try {
       const data = await request("/api/auth/telegram",{initData:TG.initData});
       s.authenticated=true; s.preview=false; s.user=data.user;
@@ -84,11 +95,11 @@ async function init() {
       const saved=localPrefs();
       if(saved){s.language=saved.language;s.theme=saved.theme;s.step="app";}
     }
-  } else {
+  } else if (!restored) {
     const saved=localPrefs();
     if(saved){s.language=saved.language;s.theme=saved.theme;s.step="app";}
   }
-  themeApply(); render();
+  themeApply(); render(); setupTonConnect();
 }
 function welcome() {
   root.innerHTML='<main class="onboard welcome"><header class="top">'+brand()+'<span class="step">01 / 03</span></header><section class="welcome-card"><div class="hero-icon">'+svg("wallet")+'</div><span class="eyebrow">PAIDMX REWARDS</span><h1>'+tr("welcome")+'<br><em>PaidMX</em></h1><p class="tagline">'+tr("tagline")+'</p><p class="muted intro">'+tr("intro")+'</p><div class="feature-pills"><span>'+svg("tasks")+tr("tasks")+'</span><span>'+svg("arena")+tr("arena")+'</span><span>'+svg("wallet")+tr("wallet")+'</span></div><button class="primary wide" data-action="start">'+tr("start")+svg("arrow")+'</button><p class="fine">Telegram Mini App · @PaidMX_bot</p></section><div class="progress"><i class="on"></i><i></i><i></i></div></main>';
@@ -116,7 +127,61 @@ function subPage() {
   if(s.page==="tasks") return '<section class="page subpage"><div class="title-row">'+svg("tasks")+'<div><h1>'+tr("tasks")+'</h1><p>'+tr("allTasks")+'</p></div></div><article class="empty"><i>'+svg("tasks")+'</i><h2>'+tr("noRewards")+'</h2><p>'+tr("adNote")+'</p><span>'+tr("soon")+'</span></article></section>';
   if(s.page==="arena") return '<section class="page subpage"><div class="title-row">'+svg("arena")+'<div><h1>'+tr("arena")+'</h1><p>'+tr("arenaNote")+'</p></div></div><article class="arcade"><small>PAIDMX ARCADE</small><h2>'+tr("spin")+' &amp; '+tr("play")+'</h2><div class="wheel">✦</div><p>'+tr("arenaNote")+'</p><span>'+tr("soon")+'</span></article></section>';
   if(s.page==="invites") return '<section class="page subpage"><div class="title-row">'+svg("users")+'<div><h1>'+tr("inviteTitle")+'</h1><p>'+tr("inviteNote")+'</p></div></div><article class="invite-card"><i>'+svg("users")+'</i><h2>'+tr("inviteTitle")+'</h2><p>'+tr("inviteNote")+'</p><div class="copy-row"><span>https://t.me/'+BOT+'?start=ref</span><button data-action="copy">'+tr("copy")+'</button></div><small>Referral rewards are not configured yet.</small></article></section>';
-  return '<section class="page subpage"><div class="title-row">'+svg("wallet")+'<div><h1>'+tr("wallet")+'</h1><p>'+tr("walletNote")+'</p></div></div><article class="wallet-card"><small>'+tr("total")+'</small><strong>$'+Number((s.user&&s.user.usdtBalance)||0).toFixed(4)+'</strong><hr><span>'+tr("points")+'</span><b>'+Number((s.user&&s.user.points)||0).toLocaleString()+'</b></article><article class="empty"><i>'+svg("wallet")+'</i><h2>'+tr("withdraw")+'</h2><p>'+tr("withdrawNote")+'</p><span>'+tr("soon")+'</span></article></section>';
+  return '<section class="page subpage"><div class="title-row">'+svg("wallet")+'<div><h1>'+tr("wallet")+'</h1><p>'+tr("walletNote")+'</p></div></div><article class="wallet-card"><small>'+tr("total")+'</small><strong>
+}
+function settingsModal() {
+  return s.settings?'<div class="scrim" data-action="close-settings"><section class="modal" data-modal><div class="row-between"><h2>'+tr("settings")+'</h2><button class="icon-button" data-action="close-settings">'+svg("close")+'</button></div><button class="setting-row" data-action="change-language">'+svg("tasks")+'<b>'+tr("changeLanguage")+'</b>'+svg("arrow")+'</button><button class="setting-row" data-action="change-theme">'+svg("sun")+'<b>'+tr("changeTheme")+'</b>'+svg("arrow")+'</button><small>@PaidMX_bot</small></section></div>':'';
+}
+function render() {
+  themeApply();
+  if(s.step==="welcome") return welcome();
+  if(s.step==="language") return languages();
+  if(s.step==="theme") return themes();
+  const nav=[["home","home"],["tasks","tasks"],["arena","arena"],["invites","invites"],["wallet","wallet"]];
+  const navHtml=nav.map(function(x){return '<button class="nav-item '+(s.page===x[0]?'active':'')+'" data-page="'+x[0]+'">'+svg(x[0]==="invites"?"users":x[0])+'<span>'+tr(x[1])+'</span></button>';}).join("");
+  root.innerHTML='<main class="dashboard"><header class="dashboard-header">'+brand()+'<button class="points-chip" data-page="wallet">✦ '+Number((s.user&&s.user.points)||0).toLocaleString()+'</button></header>'+subPage()+'<nav class="bottom-nav">'+navHtml+'</nav>'+settingsModal()+'</main>';
+}
+function setupTonConnect() {
+  if (s.tonUI || !window.TON_CONNECT_UI || !window.TON_CONNECT_UI.TonConnectUI) return;
+  try {
+    s.tonUI = new window.TON_CONNECT_UI.TonConnectUI({ manifestUrl: location.origin + "/api/tonconnect-manifest" });
+    s.tonUI.onStatusChange(function(wallet) {
+      s.wallet = wallet || null;
+      if (s.page === "wallet" && s.step === "app") render();
+    });
+  } catch (error) { console.warn("TON Connect unavailable", error); }
+}
+async function finish() {
+  saveLocal();
+  if(s.authenticated) {
+    try { await request("/api/preferences",{language:s.language,theme:s.theme}); }
+    catch(error) { toast(tr("error")); return; }
+  }
+  s.step="app"; s.page="home"; render();
+}
+root.addEventListener("click",async function(event){
+  const el=event.target.closest("button,[data-action]");
+  if(!el) return;
+  if(el.dataset.language){s.language=el.dataset.language;render();return;}
+  if(el.dataset.themeChoice){s.theme=el.dataset.themeChoice;render();return;}
+  if(el.dataset.page){s.page=el.dataset.page;s.settings=false;render();return;}
+  const action=el.dataset.action;
+  if(action==="start"){s.step="language";render();}
+  else if(action==="welcome"){s.step="welcome";render();}
+  else if(action==="language-next"){s.step="theme";render();}
+  else if(action==="back-language"){s.step="language";render();}
+  else if(action==="enter"){await finish();}
+  else if(action==="settings"){s.settings=true;render();}
+  else if(action==="close-settings"){s.settings=false;render();}
+  else if(action==="change-language"){s.settings=false;s.step="language";render();}
+  else if(action==="change-theme"){s.settings=false;s.step="theme";render();}
+  else if(action==="ton-connect"){if(!s.tonUI){setupTonConnect();}if(s.tonUI){try{await s.tonUI.openModal();}catch{toast("TON Connect could not open. Check the app manifest and deployment URL.");}}else{toast("TON Connect SDK is still loading.");}}
+  else if(action==="promo"){toast(tr("promoNote"));}
+  else if(action==="copy"){try{await navigator.clipboard.writeText("https://t.me/"+BOT+"?start=ref");toast(tr("copied"));}catch{toast("https://t.me/"+BOT+"?start=ref");}}
+});
+function toast(message){let n=document.getElementById("toast");if(!n){n=document.createElement("div");n.id="toast";n.className="toast floating";document.body.appendChild(n);}n.textContent=message;n.classList.add("show");clearTimeout(toast.timer);toast.timer=setTimeout(function(){n.classList.remove("show");},2600);}
+init();
++Number((s.user&&s.user.usdtBalance)||0).toFixed(4)+'</strong><hr><span>'+tr("points")+'</span><b>'+Number((s.user&&s.user.points)||0).toLocaleString()+'</b></article><article class="surface ton-wallet"><div class="ton-badge">TON</div><h2>TON Connect</h2><p>'+(s.wallet&&s.wallet.account?'Connected: '+safe(s.wallet.account.address.slice(0,8))+'…'+safe(s.wallet.account.address.slice(-6)):'Connect Tonkeeper or another TON wallet.')+'</p><button class="primary wide" data-action="ton-connect">'+(s.wallet&&s.wallet.account?'Manage connected wallet':'Connect TON wallet')+'</button><small class="subtle">Wallet connection only. Payouts stay disabled until wallet-proof verification and payout rules are implemented.</small></article><article class="empty"><i>'+svg("wallet")+'</i><h2>'+tr("withdraw")+'</h2><p>'+tr("withdrawNote")+'</p><span>'+tr("soon")+'</span></article></section>';
 }
 function settingsModal() {
   return s.settings?'<div class="scrim" data-action="close-settings"><section class="modal" data-modal><div class="row-between"><h2>'+tr("settings")+'</h2><button class="icon-button" data-action="close-settings">'+svg("close")+'</button></div><button class="setting-row" data-action="change-language">'+svg("tasks")+'<b>'+tr("changeLanguage")+'</b>'+svg("arrow")+'</button><button class="setting-row" data-action="change-theme">'+svg("sun")+'<b>'+tr("changeTheme")+'</b>'+svg("arrow")+'</button><small>@PaidMX_bot</small></section></div>':'';
