@@ -1,7 +1,8 @@
+import { withStormkitCompat } from "../lib/stormkit-compat.js";
 import { getDb } from "../lib/db.js";
 import { readCookie, verifySession } from "../lib/session.js";
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   if (req.method !== "GET") { res.setHeader("Allow", "GET"); return res.status(405).json({ error: "Method not allowed" }); }
   const session = verifySession(readCookie(req.headers.cookie, "paidmx_session"), process.env.SESSION_SECRET);
   if (!session) return res.status(401).json({ authenticated: false });
@@ -19,3 +20,5 @@ export default async function handler(req, res) {
     return res.status(503).json({ error: "Profile storage is unavailable" });
   }
 }
+
+export default withStormkitCompat(handler);
