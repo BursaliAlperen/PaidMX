@@ -1,3 +1,4 @@
+import { withStormkitCompat } from "../../lib/stormkit-compat.js";
 import { getDb } from "../../lib/db.js";
 
 const BOT_USERNAME = (process.env.TELEGRAM_BOT_USERNAME || "PaidMX_bot").replace(/^@/, "");
@@ -25,7 +26,7 @@ async function telegram(method, payload) {
   if (!response.ok || !data.ok) throw new Error("Telegram API request failed");
   return data.result;
 }
-export default async function handler(req, res) {
+async function handler(req, res) {
   if (req.method !== "POST") { res.setHeader("Allow","POST"); return res.status(405).json({error:"Method not allowed"}); }
   const expected = process.env.TELEGRAM_WEBHOOK_SECRET;
   if (!expected || req.headers["x-telegram-bot-api-secret-token"] !== expected) return res.status(401).json({error:"Unauthorized webhook"});
@@ -75,3 +76,5 @@ export default async function handler(req, res) {
     return res.status(500).json({error:"Webhook processing failed"});
   }
 }
+
+export default withStormkitCompat(handler);
