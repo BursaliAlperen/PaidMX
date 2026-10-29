@@ -151,7 +151,7 @@ root.addEventListener("click",async function(event){
   else if(action==="back-language"){s.step="language";render();}
   else if(action==="enter"){await finish();}
   else if(action==="settings"){s.settings=true;render();}
-  else if(action==="close-settings"){if(el.closest("[data-modal]"))return;s.settings=false;render();}
+  else if(action==="close-settings"){s.settings=false;render();}
   else if(action==="change-language"){s.settings=false;s.step="language";render();}
   else if(action==="change-theme"){s.settings=false;s.step="theme";render();}
   else if(action==="promo"){toast(tr("promoNote"));}
