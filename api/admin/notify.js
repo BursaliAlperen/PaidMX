@@ -2,7 +2,7 @@ import { getDb } from "../../lib/db.js";
 import { readCookie, verifySession } from "../../lib/session.js";
 
 const ALLOWED_EVENTS = new Set(["payout_approved","payout_rejected","payout_paid","payment_failed","deposit"]);
-function adminIds() { return new Set(String(process.env.ADMIN_TELEGRAM_IDS || "").split(",").map(x=>x.trim()).filter(x=>/^\d+$/.test(x))); }
+function adminIds() { return new Set(String(process.env.ADMIN_IDS || process.env.ADMIN_TELEGRAM_IDS || "").split(",").map(x=>x.trim()).filter(x=>/^\d+$/.test(x))); }
 async function sendTelegram(chatId, message) {
   if (!process.env.BOT_TOKEN) throw new Error("BOT_TOKEN is not configured");
   const r = await fetch("https://api.telegram.org/bot"+process.env.BOT_TOKEN+"/sendMessage", {
