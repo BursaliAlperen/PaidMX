@@ -27,12 +27,12 @@ The interface is original and borrows only the broad design language of modern r
 
 1. Install Node.js 20+.
 2. Run `npm install`.
-3. Copy `.env.example` to `.env` and configure `BOT_TOKEN`, `SESSION_SECRET` (at least 32 characters) and `DATABASE_URL`.
-4. Run `database/schema.sql` once against your PostgreSQL/Neon database.
-5. Start API routes with `npx vercel dev`.
-6. Run `npm run check`.
+3. Copy `.env.example` to `.env` and configure `BOT_TOKEN`, `ADMIN_IDS`, `SESSION_SECRET` (at least 32 characters), `DATABASE_URL`, `PUBLIC_APP_URL`, and `TELEGRAM_WEBHOOK_SECRET`.
+4. Run `database/schema.sql`, then `database/migration-001-referrals-admin.sql` against your PostgreSQL/Neon database.
+5. Run `npm run check`, `npm test`, or `npm run build`.
+6. Deploy using Stormkit with its Serverless option enabled and API Folder set to `api`.
 
-Opening the static HTML as a file is for UI preview only; API authentication and persisted preferences require Vercel dev or deployment.
+Opening the static HTML as a file is for UI preview only; authentication, webhook, referral, admin and database APIs require the Stormkit serverless runtime.
 
 ## Telegram setup
 
