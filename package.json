@@ -1,0 +1,12 @@
+{
+  "name": "paidmx",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "PaidMX Telegram Mini App starter",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "check": "node --check public/js/app.js && node --check lib/telegram.js && node --check lib/session.js && node --check api/auth/telegram.js && node --check api/me.js && node --check api/preferences.js"
+  },
+  "dependencies": { "@neondatabase/serverless": "^1.0.1" }
+}
