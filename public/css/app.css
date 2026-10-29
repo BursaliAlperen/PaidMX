@@ -521,3 +521,43 @@ body{position:fixed;inset:0}
 @media(min-width:700px){.arena-page{max-width:760px;margin:0 auto;display:grid;grid-template-columns:minmax(0,1.1fr) minmax(230px,.9fr);grid-template-rows:auto 1fr;align-content:center;align-items:stretch;gap:12px}.arena-page>.subpage-hero{grid-column:1/-1}.arena-page .wheel-card{grid-column:1;grid-row:2}.arena-page .wheel-prizes{grid-column:2;grid-row:2;align-self:center}.wheel-stage{height:clamp(210px,36vh,320px)}}
 @media(max-height:700px){.wheel-stage{height:clamp(150px,30vh,220px)}.wheel-card,.wheel-prizes{padding:9px}.wheel-foot{margin-top:5px}.wheel-result{min-height:36px}.wheel-spin{min-height:34px}.wheel-prizes{display:none}.arena-page{gap:6px}.subpage-hero{margin-bottom:0}}
 @media(max-width:380px){.wheel-label{font-size:9px}.wheel-label small{font-size:6px}.wheel-stage{height:180px}.wheel-card{padding:9px}.wheel-foot{font-size:6px}}
+
+
+/* PaidMX Gold Edition — compact, premium and touch-first */
+:root{--pmx-gold:#ffca05;--pmx-gold-2:#ff9700;--pmx-ink:#0c0c13;--pmx-panel:#15151e;--pmx-line:rgba(255,202,5,.17)}
+html,body{background:var(--pmx-ink)}
+body{background:radial-gradient(ellipse at 50% -12%,rgba(255,183,0,.095),transparent 42%),var(--pmx-ink)}
+.app-shell,.dashboard{background:transparent!important}
+.dashboard{color:#f7f7fb}
+.dashboard-header{background:rgba(12,12,19,.9)!important;border-bottom:1px solid rgba(255,202,5,.13)!important;backdrop-filter:blur(18px)}
+.brand-mark{background:linear-gradient(135deg,#fff26b 0%,#ffbf00 48%,#f68b00 100%)!important;color:#16120a!important;box-shadow:0 4px 18px rgba(255,174,0,.2)!important}
+.brand-mark span{color:#16120a!important}
+.points-chip{border:1px solid rgba(255,202,5,.27)!important;background:linear-gradient(135deg,rgba(255,202,5,.14),rgba(255,151,0,.07))!important;color:#ffdc54!important}
+.bottom-nav{background:rgba(14,14,21,.96)!important;border-top:1px solid rgba(255,202,5,.15)!important;backdrop-filter:blur(20px)}
+.nav-item{color:#858592!important}.nav-item.active{color:#ffd32a!important}.nav-item.active svg{filter:drop-shadow(0 0 7px rgba(255,190,0,.24))}
+.page{scrollbar-width:none}.page::-webkit-scrollbar{display:none}
+.subpage-hero{border:1px solid rgba(255,202,5,.14)!important;background:linear-gradient(130deg,rgba(255,190,0,.09),rgba(255,255,255,.018) 54%,rgba(255,151,0,.045))!important;border-radius:20px!important;padding:14px!important}
+.subpage-hero h1{letter-spacing:-.055em!important;color:#fff!important}
+.subpage-hero p,.feature-task-card p,.info-panel p,.empty p{color:#a7a7b6!important}
+.kicker{color:#ffd23b!important;letter-spacing:.17em!important}
+.subpage-icon,.feature-task-icon{background:linear-gradient(145deg,#ffe35a,#ff9e00)!important;color:#17120a!important;box-shadow:0 6px 20px rgba(255,176,0,.15)}
+.filter-row{gap:7px!important}.filter-chip{background:#171720!important;border:1px solid #292935!important;color:#a8a8b7!important}.filter-chip.selected{background:rgba(255,202,5,.13)!important;border-color:rgba(255,202,5,.5)!important;color:#ffdc4e!important}
+.feature-task-card,.info-panel,.empty,.invite-card,.wallet-card,.wheel-card,.wheel-prizes{background:linear-gradient(155deg,rgba(27,27,38,.98),rgba(17,17,25,.98))!important;border:1px solid rgba(255,202,5,.14)!important;box-shadow:0 12px 34px rgba(0,0,0,.18)!important}
+.feature-task-card h2,.info-panel b,.empty h2,.invite-card h2,.section-heading h2{color:#f8f8fc!important}
+.status-pill{background:rgba(255,202,5,.1)!important;border:1px solid rgba(255,202,5,.2)!important;color:#ffdc55!important}
+.primary,.wheel-spin{background:linear-gradient(105deg,#ffe65b 0%,#ffbf00 48%,#ff9400 100%)!important;color:#17120a!important;border:0!important;box-shadow:0 7px 20px rgba(255,173,0,.16)!important;font-weight:900!important}
+.primary:disabled{opacity:.55}
+.ad-network-banner{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;margin:0 0 12px;border-radius:17px;border:1px solid rgba(255,190,0,.25);background:linear-gradient(110deg,rgba(255,190,0,.12),rgba(255,151,0,.04) 58%,rgba(255,255,255,.02));box-shadow:inset 0 1px rgba(255,255,255,.04)}
+.litebits-logo{display:flex;align-items:center;gap:10px;min-width:0}.litebits-symbol{width:38px;height:38px;display:grid;place-items:center;flex:none;border-radius:12px;background:linear-gradient(145deg,#ffdb32,#ff9a00);color:#19140b;box-shadow:0 4px 14px #ffae0029}.litebits-symbol svg{width:26px;height:26px}.litebits-logo>span:last-child{display:flex;flex-direction:column;gap:3px}.litebits-logo b{font-size:15px;letter-spacing:-.055em;color:#fff}.litebits-logo em{font-style:normal;color:#ffb000}.litebits-logo small{font-size:7px;letter-spacing:.15em;font-weight:900;color:#a5a5b4}
+.network-badge{display:flex;align-items:center;gap:6px;font-size:7px;letter-spacing:.08em;font-weight:900;color:#c7c7d2;white-space:nowrap}.network-badge i{width:6px;height:6px;border-radius:50%;background:#fbbf24;box-shadow:0 0 0 3px #fbbf241c}
+.litebits-task-card{position:relative;overflow:hidden}.litebits-task-card:before{content:"";position:absolute;right:-48px;top:-80px;width:190px;height:190px;border-radius:50%;background:radial-gradient(circle,rgba(255,189,0,.12),transparent 70%);pointer-events:none}.task-provider-label{margin:2px 0 6px;font-size:7px;font-weight:1000;letter-spacing:.16em;color:#ffc928}.task-footnote{display:block;margin-top:8px;color:#777786;font-size:8px;line-height:1.4}
+.task-detail-grid>div{background:rgba(255,255,255,.025)!important;border:1px solid rgba(255,255,255,.055);border-radius:10px;padding:8px!important}.task-detail-grid small{color:#8c8c9d!important}.task-detail-grid b{color:#eeeef5!important}
+.wheel-stage{filter:drop-shadow(0 8px 22px rgba(255,174,0,.07))}
+.wheel-card .wheel-status{color:#f5cf4a!important;border:1px solid rgba(255,202,5,.15);background:rgba(255,202,5,.06)!important}
+.wheel-result{background:rgba(255,255,255,.025)!important;border-color:rgba(255,202,5,.12)!important}.wheel-result b{color:#fff!important}.wheel-result small{color:#a5a5b4!important}
+.wheel-prizes-title h2{color:#f9f9fc!important}.prize-grid>div{background:rgba(255,255,255,.025)!important;border-color:rgba(255,255,255,.06)!important}.prize-grid b{color:#eeeef5!important}.prize-grid small,.wheel-disclaimer,.wheel-foot{color:#858595!important}
+.invite-stats>div,.copy-row{background:rgba(255,255,255,.03)!important;border-color:rgba(255,202,5,.12)!important}
+.modal{background:#171720!important;border:1px solid rgba(255,202,5,.18)!important;color:#fff}
+@media(min-width:700px){.dashboard{max-width:920px!important;margin:0 auto!important;border-left:1px solid rgba(255,202,5,.08);border-right:1px solid rgba(255,202,5,.08)}.tasks-page{max-width:740px;margin:0 auto}.ad-network-banner{padding:15px 18px}.litebits-symbol{width:44px;height:44px}}
+@media(max-height:700px){.tasks-page .empty-refined{display:none}.tasks-page .info-panel{padding:9px!important}.tasks-page .feature-task-card{padding:12px!important}.tasks-page .subpage-hero{padding:10px!important}.tasks-page .task-footnote{font-size:7px}}
+@media(max-width:380px){.network-badge{font-size:6px}.litebits-logo b{font-size:13px}.ad-network-banner{padding:9px}.litebits-symbol{width:33px;height:33px}.task-detail-grid{gap:5px!important}}
