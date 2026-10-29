@@ -8,8 +8,9 @@
     "node": ">=20"
   },
   "scripts": {
-    "check": "node --check public/js/app.js && node --check public/js/admin.js && node --check lib/telegram.js && node --check lib/session.js && node --check api/auth/telegram.js && node --check api/me.js && node --check api/preferences.js && node --check api/referral.js && node --check api/telegram/webhook.js && node --check api/admin/overview.js && node --check api/admin/notify.js && node --check api/payments/webhook.js && node --check api/tonconnect-manifest.js",
-    "test": "node --test"
+    "check": "node --check public/js/app.js && node --check public/js/admin.js && node --check lib/stormkit-compat.js && node --check lib/telegram.js && node --check lib/session.js && node --check api/auth/telegram.js && node --check api/me.js && node --check api/preferences.js && node --check api/referral.js && node --check api/telegram/webhook.js && node --check api/admin/overview.js && node --check api/admin/notify.js && node --check api/payments/webhook.js && node --check api/tonconnect-manifest.js",
+    "test": "node --test",
+    "build": "npm run check && npm test"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.0.1"
