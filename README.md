@@ -77,7 +77,7 @@ The operational scaffold adds these routes:
      -d "url=${PUBLIC_APP_URL}/api/telegram/webhook" \
      -d "secret_token=${TELEGRAM_WEBHOOK_SECRET}"
    ```
-4. Open `/admin.html` from the deployed domain after signing in through the Telegram Mini App. The signed-in Telegram ID must be included in `ADMIN_TELEGRAM_IDS`. The server validates admin access; hiding the page is not the security boundary.
+4. Open `/admin.html` from the deployed domain after signing in through the Telegram Mini App. The signed-in Telegram ID must be included in `ADMIN_IDS`. The server validates admin access; hiding the page is not the security boundary.
 5. For automatic payment notifications, configure the chosen payment provider's server-side adapter to call `/api/payments/webhook` with the normalized event fields `eventId`, `provider`, `telegramId`, `eventType`, `amount`, `currency`, and optional `note`, plus the secret header. The event ID must be stable and unique per provider event. This endpoint logs and notifies; it deliberately does **not** credit balances or transfer money. Provider-specific signature validation and settlement rules must be added for the actual provider before real funds are handled.
 
 ## Deploying and fixing Stormkit's “Repository is inaccessible” error
