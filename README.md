@@ -25,7 +25,7 @@ The interface is original and borrows only the broad design language of modern r
 
 ## Local setup
 
-1. Install Node.js 20+.
+1. Use Node.js 22 LTS (pinned by `mise.toml`, `.node-version` and `package.json`).
 2. Run `npm install`.
 3. Copy `.env.example` to `.env` and configure `BOT_TOKEN`, `ADMIN_IDS`, `SESSION_SECRET` (at least 32 characters), `DATABASE_URL`, `PUBLIC_APP_URL`, and `TELEGRAM_WEBHOOK_SECRET`.
 4. Run `database/schema.sql`, then `database/migration-001-referrals-admin.sql` against your PostgreSQL/Neon database.
