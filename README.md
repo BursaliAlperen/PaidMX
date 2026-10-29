@@ -84,7 +84,7 @@ The operational scaffold adds these routes:
 
 That message is a GitHub authorization/repository visibility problem; it is not proof of a source-code or build error. In Stormkit, open the app's Git integration/settings and reconnect GitHub, then ensure the GitHub App installation has access to `BursaliAlperen/PaidMX`. If the repository is private, explicitly grant that repository to the installation. Refresh the app and retry the deployment after the repository is visible. Do not paste access tokens into chat.
 
-This project currently uses Vercel-style `api/*.js` serverless routes and `vercel.json`. A static-only deployment will serve the interface but will not run authentication, webhook, referral, admin or payment APIs. If Stormkit does not support this Vercel function layout, deploy this repository to Vercel or port the API routes to Stormkit's supported serverless/runtime model.
+PaidMX is configured for Stormkit Cloud serverless. The API files in the top-level `api/` directory export Node.js handlers through `lib/stormkit-compat.js`, which parses JSON bodies and adapts `res.status(...).json(...)` to Stormkit's native response stream. In Stormkit's **production → Config** screen set **Build command** to `npm run build`, **Output folder** to `public`, enable **Serverless**, and set **API Folder** to `api`. Stormkit's environment-variable settings are available to serverless functions at runtime. A static-only deployment will serve the interface but will not run authentication, Telegram webhook, referral, admin or payment APIs. The retained `vercel.json` is optional legacy configuration and is not the Stormkit API router.
 
 ## Important production boundaries
 
