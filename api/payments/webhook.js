@@ -1,3 +1,4 @@
+import { withStormkitCompat } from "../../lib/stormkit-compat.js";
 import { timingSafeEqual } from "node:crypto";
 import { getDb } from "../../lib/db.js";
 
@@ -28,7 +29,7 @@ function userMessage(type,amount,currency,note,language) {
   };
   return (messages[language]||messages.en)[type]||messages.en.payment_failed;
 }
-export default async function handler(req,res) {
+async function handler(req,res) {
   if(req.method!=="POST"){res.setHeader("Allow","POST");return res.status(405).json({error:"Method not allowed"});}
   if(!secretMatches(req.headers["x-paidmx-webhook-secret"],process.env.PAYMENT_WEBHOOK_SECRET))return res.status(401).json({error:"Invalid payment webhook secret"});
   const body=req.body||{};
@@ -61,3 +62,5 @@ export default async function handler(req,res) {
     return res.status(200).json({ok:true,eventId:inserted[0].id,notification:delivery});
   }catch(error){console.error("PaidMX payment webhook:",error?.message||"unknown");return res.status(503).json({error:"Payment event could not be recorded"});}
 }
+
+export default withStormkitCompat(handler);
