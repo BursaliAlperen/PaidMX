@@ -23,7 +23,7 @@ async function handler(req, res) {
       VALUES (${tgUser.id}, ${tgUser.username}, ${tgUser.firstName})
       ON CONFLICT (telegram_id) DO UPDATE SET username = EXCLUDED.username,
         first_name = EXCLUDED.first_name, updated_at = NOW()
-      RETURNING telegram_id, username, first_name, language, theme, points, usdt_balance`;
+      RETURNING telegram_id, username, first_name, language, theme, points, usdt_balance, gram_balance`;
     const user = rows[0];
     const session = createSession(tgUser.id, process.env.SESSION_SECRET);
     res.setHeader("Set-Cookie", sessionCookie(session.token, session.maxAge));
@@ -31,7 +31,7 @@ async function handler(req, res) {
       authenticated: true,
       onboardingComplete: Boolean(user.language && user.theme),
       user: { id: String(user.telegram_id), username: user.username, firstName: user.first_name,
-        language: user.language, theme: user.theme, points: Number(user.points), usdtBalance: Number(user.usdt_balance) }
+        language: user.language, theme: user.theme, points: Number(user.points), usdtBalance: Number(user.usdt_balance), gramBalance: Number(user.gram_balance || 0) }
     });
   } catch (error) {
     console.error("PaidMX auth/database error:", error?.message || "unknown");
