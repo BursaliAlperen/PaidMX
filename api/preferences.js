@@ -1,10 +1,11 @@
+import { withStormkitCompat } from "../lib/stormkit-compat.js";
 import { getDb } from "../lib/db.js";
 import { readCookie, verifySession } from "../lib/session.js";
 
 const LANGUAGES = new Set(["tr", "en", "ar", "ru", "es", "pt", "hi", "id", "zh"]);
 const THEMES = new Set(["midnight", "ocean", "emerald", "rose", "violet", "sunset"]);
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   if (req.method !== "POST") { res.setHeader("Allow", "POST"); return res.status(405).json({ error: "Method not allowed" }); }
   const session = verifySession(readCookie(req.headers.cookie, "paidmx_session"), process.env.SESSION_SECRET);
   if (!session) return res.status(401).json({ error: "Open PaidMX from Telegram to sign in." });
@@ -22,3 +23,5 @@ export default async function handler(req, res) {
     return res.status(503).json({ error: "Could not save preferences. Check database configuration." });
   }
 }
+
+export default withStormkitCompat(handler);
