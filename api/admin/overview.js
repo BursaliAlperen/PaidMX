@@ -2,7 +2,7 @@ import { getDb } from "../../lib/db.js";
 import { readCookie, verifySession } from "../../lib/session.js";
 
 function adminIds() {
-  return new Set(String(process.env.ADMIN_TELEGRAM_IDS || "").split(",").map(x => x.trim()).filter(x => /^\d+$/.test(x)));
+  return new Set(String(process.env.ADMIN_IDS || process.env.ADMIN_TELEGRAM_IDS || "").split(",").map(x => x.trim()).filter(x => /^\d+$/.test(x)));
 }
 export default async function handler(req, res) {
   if (req.method !== "GET") { res.setHeader("Allow","GET"); return res.status(405).json({error:"Method not allowed"}); }
