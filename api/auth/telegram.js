@@ -1,8 +1,9 @@
+import { withStormkitCompat } from "../../lib/stormkit-compat.js";
 import { getDb } from "../../lib/db.js";
 import { verifyTelegramInitData } from "../../lib/telegram.js";
 import { createSession, sessionCookie } from "../../lib/session.js";
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   if (req.method !== "POST") {
     res.setHeader("Allow", "POST");
     return res.status(405).json({ error: "Method not allowed" });
@@ -37,3 +38,5 @@ export default async function handler(req, res) {
     return res.status(503).json({ error: "Storage unavailable. Check DATABASE_URL and run database/schema.sql." });
   }
 }
+
+export default withStormkitCompat(handler);
