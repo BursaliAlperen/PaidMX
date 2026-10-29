@@ -1,10 +1,11 @@
+import { withStormkitCompat } from "../../lib/stormkit-compat.js";
 import { getDb } from "../../lib/db.js";
 import { readCookie, verifySession } from "../../lib/session.js";
 
 function adminIds() {
   return new Set(String(process.env.ADMIN_IDS || process.env.ADMIN_TELEGRAM_IDS || "").split(",").map(x => x.trim()).filter(x => /^\d+$/.test(x)));
 }
-export default async function handler(req, res) {
+async function handler(req, res) {
   if (req.method !== "GET") { res.setHeader("Allow","GET"); return res.status(405).json({error:"Method not allowed"}); }
   const session = verifySession(readCookie(req.headers.cookie, "paidmx_session"), process.env.SESSION_SECRET);
   if (!session || !adminIds().has(session.userId)) return res.status(403).json({error:"Admin access required"});
@@ -31,3 +32,5 @@ export default async function handler(req, res) {
     return res.status(503).json({error:"Admin data unavailable. Run database migrations first."});
   }
 }
+
+export default withStormkitCompat(handler);
