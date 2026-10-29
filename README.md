@@ -37,7 +37,7 @@ Opening the static HTML as a file is for UI preview only; authentication, webhoo
 ## Telegram setup
 
 1. Configure your bot with BotFather and set the deployed HTTPS Mini App URL.
-2. In Stormkit, open **PaidMX → production → Config → Environment Variables** and add `BOT_TOKEN`, `ADMIN_IDS`, `SESSION_SECRET`, `DATABASE_URL`, `PUBLIC_APP_URL` and `TELEGRAM_WEBHOOK_SECRET`. Add `PAYMENT_WEBHOOK_SECRET` only if configuring the normalized payment-event endpoint.
+2. In Stormkit, open **PaidMX → production → Config → Environment Variables** and add `BOT_TOKEN`, `ADMIN_IDS`, `SESSION_SECRET`, `DATABASE_URL`, `PUBLIC_APP_URL` and `TELEGRAM_WEBHOOK_SECRET`. Add `PAYMENT_WEBHOOK_SECRET` only after a real payment provider is integrated.
 3. Run `database/schema.sql`, then `database/migration-001-referrals-admin.sql` against the same PostgreSQL database.
 4. Deploy the app and set the Telegram bot's Menu Button / Mini App URL to `PUBLIC_APP_URL`.
 5. Register the Telegram webhook once from a trusted terminal where `BOT_TOKEN`, `PUBLIC_APP_URL` and `TELEGRAM_WEBHOOK_SECRET` are available:
