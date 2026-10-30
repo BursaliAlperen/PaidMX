@@ -1,0 +1,11 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // PaidMX verilerine istemci SDK'sından doğrudan erişim yoktur.
+    // Okuma/yazma işlemleri kimliği doğrulanmış Cloud Functions üzerinden
+    // Firebase Admin SDK ile ve sunucu tarafı yetkilendirmeyle yapılır.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
