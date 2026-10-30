@@ -9,7 +9,7 @@ const db = getFirestore();
 const BOT_TOKEN = defineSecret("BOT_TOKEN");
 
 const MAX_INIT_DATA_AGE_SECONDS = 24 * 60 * 60;
-const ADMIN_IDS = new Set(["7904032877"]);
+const ADMIN_IDS = new Set((process.env.ADMIN_IDS || "7904032877").split(",").map(v => v.trim()).filter(Boolean));
 
 function send(res, status, body) {
   res.status(status).set("Content-Type", "application/json").send(body);
