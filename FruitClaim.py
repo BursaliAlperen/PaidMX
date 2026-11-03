@@ -125,6 +125,9 @@ class Theme:
     def __getattr__(self, name):
         if name in self.colors:
             return self.colors[name]
+        upper = name.upper()
+        if hasattr(Colors, upper):
+            return getattr(Colors, upper)
         return C.YELLOW
 
 current_theme = Theme("neon")
@@ -648,19 +651,19 @@ def api_login(email, password):
         return None
 
 def api_spin_fast(info):
-    """ULTRA HIZLI spin döngüsü - HER SPİNDE ANLIK STATS GÖSTERİR"""
+    """ULTRA HIZLI spin döngüsü - HER SPİNDE ANLIK STATS"""
     token = info["token"]
     email = info["email"]
     credits = info["credits"]
     balance = info["balance"]
-    total_reward = 0.0
+    total_reward = 0
     spins = 0
     stuck = 0
     max_stuck = 3
 
     if credits <= 0:
         print(f"{T.warning}⚠️  No credits. Watch ads first!{C.RESET}")
-        return balance, credits, 0, 0.0
+        return balance, credits, 0, 0
 
     print(f"\n{T.accent}🚀 ULTRA FAST MODE: {credits} credits{C.RESET}\n")
     
@@ -713,7 +716,7 @@ def api_spin_fast(info):
             total_reward += reward
             spins += 1
 
-            # HER SPİNDE ANLIK STATS GÖSTER (her 10 değil!)
+            # HER SPİNDE ANLIK STATS GÖSTER
             TerminalManager.clear()
             print(VisualComponents.status_bar())
             print()
@@ -736,7 +739,6 @@ def api_spin_fast(info):
                 print(f"{T.info}ℹ️  {data['message']}{C.RESET}")
             print(Drawer.line("═", color=T.primary))
 
-            # Ultra hızlı bekleme
             time.sleep(0.1)
             
         except requests.exceptions.ConnectionError:
@@ -793,17 +795,22 @@ def api_ads_fast(uid):
     return watched
 
 def process_account_247(email, password):
-    """7/24 SINIRSIZ DÖNGÜ - HİÇ DURMAZ"""
+    """7/24 SINIRSIZ DÖNGÜ - 5 CYCLE'DA BİR EKRAN TEMİZLER"""
     print(f"\n{T.success}{'='*60}{C.RESET}")
     print(Drawer.center(f"{T.accent}{C.BOLD} 7/24 ULTRA FAST MODE - {email}{C.RESET}"))
     print(f"{T.success}{'='*60}{C.RESET}\n")
     
     cycle = 0
     total_spins_all = 0
-    total_reward_all = 0.0
+    total_reward_all = 0
     
     while True:  # SINIRSIZ DÖNGÜ
         cycle += 1
+        
+        # HER 5 CYCLE'DA BİR EKRANI TEMİZLE
+        if cycle % 5 == 1:
+            TerminalManager.clear()
+        
         print(f"\n{T.primary}{'='*60}{C.RESET}")
         print(Drawer.center(f"🔄 CYCLE #{cycle} | {datetime.now().strftime('%H:%M:%S')}"))
         print(f"{T.primary}{'='*60}{C.RESET}\n")
@@ -817,30 +824,40 @@ def process_account_247(email, password):
             
         print(f"{T.success}✅ Logged in | Balance: {info['balance']} | Credits: {info['credits']}{C.RESET}")
         
-        # Spin at
+        # Spin at - HATA YAKALAMA
+        spins = 0
+        rew = 0
         try:
             bal, cred, spins, rew = api_spin_fast(info)
             total_spins_all += spins
             total_reward_all += rew
-            print(f"\n{T.success}✅ Spins: {spins} | Reward: {rew:.4f}{C.RESET}")
+            print(f"\n{T.success}✅ Spins: {spins} | Reward: {rew}{C.RESET}")
         except Exception as spin_err:
             print(f"{T.error}❌ Spin loop error: {spin_err}{C.RESET}")
-            spins, rew = 0, 0.0
+            spins = 0
+            rew = 0
         
-        # Reklam izle
+        # Reklam izle - HATA YAKALAMA
+        ads = 0
         try:
             ads = api_ads_fast(info["user_id"])
-            StatsManager.update(email, spins, rew, ads)
-            print(f"{T.success}📺 Ads: {ads} | Total Spins: {total_spins_all} | Total Reward: {total_reward_all:.4f}{C.RESET}")
         except Exception as ads_err:
             print(f"{T.error}❌ Ads error: {ads_err}{C.RESET}")
+            ads = 0
+        
+        # Stats güncelle
+        try:
+            StatsManager.update(email, spins, rew, ads)
+            print(f"{T.success}📺 Ads: {ads} | Total Spins: {total_spins_all} | Total Reward: {total_reward_all}{C.RESET}")
+        except Exception as stats_err:
+            print(f"{T.error}❌ Stats update error: {stats_err}{C.RESET}")
         
         # Kısa bekleme
         print(f"\n{T.warning}⏳ Restarting in 2s... (Ctrl+C to stop){C.RESET}")
         time.sleep(2)
 
 # ═══════════════════════════════════════════════════════════════════
-# BÖLÜM 14: MENÜ SİSTEMİ (INPUT VALIDATION DÜZELTİLDİ!)
+# BÖLÜM 14: MENÜ SİSTEMİ
 # ═══════════════════════════════════════════════════════════════════
 def start_single():
     accs = AccountManager.list_all()
