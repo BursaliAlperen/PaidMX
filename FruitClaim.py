@@ -1,13 +1,15 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
-══════════════════════════════════════════════════════════════════╗
-║     🎰 FRUITCLAIM PRO v7.0 - ULTRA FAST 7/24 EDITION          ║
+╔══════════════════════════════════════════════════════════════════╗
+║     🎰 FRUITCLAIM PRO v7.0 - ULTRA FAST 7/24 EDITION 🎰         ║
 ║     Unlimited Loop | Multi-Account | AAA UI | Zero Bugs          ║
 ║     Creator: AlperenThe | 2026                                   ║
 ╚══════════════════════════════════════════════════════════════════╝
 """
 
 # ═══════════════════════════════════════════════════════════════════
-# BÖLÜM 1: IMPORTS VE TEMEL AYARLAR
+# BÖLÜM 1: IMPORTS
 # ═══════════════════════════════════════════════════════════════════
 import json
 import os
@@ -25,26 +27,27 @@ from urllib3.util.retry import Retry
 # BÖLÜM 2: RENK KODLARI
 # ═══════════════════════════════════════════════════════════════════
 class Colors:
-    RESET       = "\033[0m"
-    BOLD        = "\033[1m"
-    DIM         = "\033[2m"
-    ITALIC      = "\033[3m"
-    UNDERLINE   = "\033[4m"
-    BLACK       = "\033[30m"
-    RED         = "\033[31m"
-    GREEN       = "\033[32m"
-    YELLOW      = "\033[33m"
-    BLUE        = "\033[34m"
-    MAGENTA     = "\033[35m"
-    CYAN        = "\033[36m"
-    WHITE       = "\033[37m"
-    BRIGHT_RED      = "\033[91m"
-    BRIGHT_GREEN    = "\033[92m"
-    BRIGHT_YELLOW   = "\033[93m"
-    BRIGHT_BLUE     = "\033[94m"
-    BRIGHT_MAGENTA  = "\033[95m"
-    BRIGHT_CYAN     = "\033[96m"
-    BRIGHT_WHITE    = "\033[97m"
+    RESET = "\033[0m"
+    BOLD = "\033[1m"
+    DIM = "\033[2m"
+    ITALIC = "\033[3m"
+    UNDERLINE = "\033[4m"
+    BLACK = "\033[30m"
+    RED = "\033[31m"
+    GREEN = "\033[32m"
+    YELLOW = "\033[33m"
+    BLUE = "\033[34m"
+    MAGENTA = "\033[35m"
+    CYAN = "\033[36m"
+    WHITE = "\033[37m"
+    BRIGHT_BLACK = "\033[90m"
+    BRIGHT_RED = "\033[91m"
+    BRIGHT_GREEN = "\033[92m"
+    BRIGHT_YELLOW = "\033[93m"
+    BRIGHT_BLUE = "\033[94m"
+    BRIGHT_MAGENTA = "\033[95m"
+    BRIGHT_CYAN = "\033[96m"
+    BRIGHT_WHITE = "\033[97m"
 
 C = Colors()
 
@@ -87,6 +90,30 @@ class Theme:
             "info": C.GREEN,
             "border": C.GREEN,
             "text": C.BRIGHT_GREEN,
+            "dim": C.DIM,
+        },
+        "ocean": {
+            "primary": C.BLUE,
+            "secondary": C.CYAN,
+            "accent": C.BRIGHT_CYAN,
+            "success": C.GREEN,
+            "error": C.RED,
+            "warning": C.YELLOW,
+            "info": C.BLUE,
+            "border": C.BLUE,
+            "text": C.WHITE,
+            "dim": C.DIM,
+        },
+        "royal": {
+            "primary": C.MAGENTA,
+            "secondary": C.BRIGHT_MAGENTA,
+            "accent": C.YELLOW,
+            "success": C.GREEN,
+            "error": C.RED,
+            "warning": C.YELLOW,
+            "info": C.BLUE,
+            "border": C.MAGENTA,
+            "text": C.WHITE,
             "dim": C.DIM,
         },
     }
@@ -137,8 +164,11 @@ class TerminalManager:
 
     @staticmethod
     def set_title(title):
-        sys.stdout.write(f"\033]0;{title}\007")
-        sys.stdout.flush()
+        try:
+            sys.stdout.write(f"\033]0;{title}\007")
+            sys.stdout.flush()
+        except:
+            pass
 
 # ═══════════════════════════════════════════════════════════════════
 # BÖLÜM 5: ÇİZİM FONKSİYONLARI
@@ -164,10 +194,10 @@ class Drawer:
         if title:
             t = f" {title} ".center(inner)
             out.append(f"{T.primary}┃{C.RESET}{T.accent}{t}{C.RESET}{T.primary}┃{C.RESET}")
-            out.append(f"{T.primary}┣{'━' * inner}{C.RESET}")
+            out.append(f"{T.primary}┣{'━' * inner}┫{C.RESET}")
         for line in content_lines:
             padded = line.ljust(inner)[:inner]
-            out.append(f"{T.primary}┃{C.RESET} {padded} {T.primary}{C.RESET}")
+            out.append(f"{T.primary}┃{C.RESET} {padded} {T.primary}┃{C.RESET}")
         out.append(f"{T.primary}┗{'━' * inner}┛{C.RESET}")
         return '\n'.join(out)
 
@@ -178,16 +208,20 @@ class Drawer:
             left = "═" * ((w - len(text) - 4) // 2)
             right = "═" * (w - len(text) - 4 - len(left))
             return f"{T.border}{left} {T.accent}« {text} »{T.border} {right}{C.RESET}"
+        elif style == "star":
+            left = "✦" * ((w - len(text) - 4) // 2)
+            right = "✦" * (w - len(text) - 4 - len(left))
+            return f"{T.border}{left} {T.accent}[ {text} ]{T.border} {right}{C.RESET}"
         else:
             left = "─" * ((w - len(text) - 4) // 2)
             right = "─" * (w - len(text) - 4 - len(left))
             return f"{T.border}{left} {T.accent}• {text} •{T.border} {right}{C.RESET}"
 
-# ══════════════════════════════════════════════════════════════════
+# ═══════════════════════════════════════════════════════════════════
 # BÖLÜM 6: ANİMASYON SİSTEMİ
 # ═══════════════════════════════════════════════════════════════════
 class Animator:
-    SPINNERS = ["", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "", "⠇", "⠏"]
+    SPINNERS = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"]
 
     @staticmethod
     def spinner(text, duration=1.0, color=None):
@@ -209,7 +243,12 @@ class Animator:
         filled = int(width * percent / 100)
         empty = width - filled
         bar = "█" * filled + "░" * empty
-        color = T.success if percent >= 70 else (T.warning if percent >= 30 else T.error)
+        if percent < 30:
+            color = T.error
+        elif percent < 70:
+            color = T.warning
+        else:
+            color = T.success
         return f"{color}[{bar}]{C.RESET} {percent:3d}% {label}"
 
     @staticmethod
@@ -219,26 +258,16 @@ class Animator:
             time.sleep(0.1)
 
 # ═══════════════════════════════════════════════════════════════════
-# BÖLÜM 7: ASCII SANAT (DÜZELTİLMİŞ)
+# BÖLÜM 7: ASCII SANAT
 # ═══════════════════════════════════════════════════════════════════
 class ASCIIArt:
     LOGO_BIG = """
  ███████╗██╗  ██╗ ██████╗ ███╗   ██╗███████╗██████╗ 
  ██╔════╝██║  ██║██╔═══██╗████╗  ██║██╔════╝██╔══██╗
  ███████╗███████║██║   ██║██╔██╗ ██║█████╗  ██████╔╝
- ╚════██║██╔══██║██║   ██║██║╚██╗██║██╔══╝  ██══██╗
+ ╚════██║██╔══██║██║   ██║██║╚██╗██║██╔══╝  ██╔══██╗
  ███████║██║  ██║╚██████╔╝██║ ╚████║███████╗██║  ██║
  ╚══════╝╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═══╝╚══════╝╚═╝  ╚═╝
-    """
-
-    SLOT_MACHINE = """
- ╔═══════════════════════════╗
- ║  🎰  SLOT MACHINE  🎰    ║
-   +-----+-----+-----+     
- ║  | 🍒  | 🍋  | 🍇  |     ║
- ║  +-----+-----+-----+     ║
- ║         [ SPIN ]          ║
- ╚═══════════════════════════╝
     """
 
 # ═══════════════════════════════════════════════════════════════════
@@ -298,7 +327,7 @@ class VisualComponents:
         top = f"{c}┌{'─' * (w - 2)}┐{C.RESET}"
         mid = f"{c}│{C.RESET} {icon} {label:<15} {c}│{C.RESET}"
         val = f"{c}│{C.RESET} {T.accent}{C.BOLD}{str(value):<{w - 3}}{C.RESET}{c}│{C.RESET}"
-        bot = f"{c}└{'─' * (w - 2)}{C.RESET}"
+        bot = f"{c}└{'─' * (w - 2)}┘{C.RESET}"
         return f"{top}\n{mid}\n{val}\n{bot}"
 
     @staticmethod
@@ -359,7 +388,7 @@ class VisualComponents:
         out = []
         out.append("")
         out.append(Drawer.center(f"{T.primary}{C.BOLD}╔══════════════════════════════════════════════════════╗{C.RESET}", w))
-        out.append(Drawer.center(f"{T.primary}{C.BOLD}║{C.RESET}{T.accent}   FRUITCLAIM PRO v7.0 - ULTRA FAST 🎰  {C.RESET}{T.primary}{C.BOLD}║{C.RESET}", w))
+        out.append(Drawer.center(f"{T.primary}{C.BOLD}║{C.RESET}{T.accent}  🎰 FRUITCLAIM PRO v7.0 - ULTRA FAST 🎰  {C.RESET}{T.primary}{C.BOLD}║{C.RESET}", w))
         out.append(Drawer.center(f"{T.primary}{C.BOLD}╚══════════════════════════════════════════════════════╝{C.RESET}", w))
         out.append("")
         out.append(Drawer.center(f"{T.text}7/24 Unlimited | Multi-Account | Zero Bugs{C.RESET}", w))
@@ -374,7 +403,7 @@ class VisualComponents:
 class Effects:
     @staticmethod
     def confetti(duration=1.0):
-        emojis = ["🎉", "", "✨", "⭐", "💫", "🌟"]
+        emojis = ["🎉", "🎊", "✨", "⭐", "💫", "🌟"]
         w = TerminalManager.width()
         end = time.time() + duration
         try:
@@ -437,7 +466,7 @@ class StatsManager:
         print(Drawer.line("═", color=T.primary))
         print()
         if not stats:
-            print(Drawer.center(f"{T.warning}️  No data yet. Run the bot first!{C.RESET}", w))
+            print(Drawer.center(f"{T.warning}⚠️  No data yet. Run the bot first!{C.RESET}", w))
             return
         total_spins = sum(s.get("spins", 0) for s in stats.values())
         total_reward = sum(s.get("reward", 0) for s in stats.values())
@@ -530,7 +559,7 @@ class AccountManager:
                 break
             elif ch == '+':
                 email = input(VisualComponents.input_prompt("Email", "📧")).strip()
-                password = input(VisualComponents.input_prompt("Password", "")).strip()
+                password = input(VisualComponents.input_prompt("Password", "🔑")).strip()
                 if email and password:
                     AccountManager.add(email, password)
                     print(VisualComponents.notification("SUCCESS", "Account added!", "success"))
@@ -562,7 +591,7 @@ class AccountManager:
                     time.sleep(1)
 
 # ═══════════════════════════════════════════════════════════════════
-# BÖLÜM 12: API URL'LERİ
+# BÖLÜM 12: API URL'LERİ (BOŞLUKSUZ - DÜZELTİLDİ!)
 # ═══════════════════════════════════════════════════════════════════
 API_LOGIN = "https://slotfruits.com/api/v1/users/signupFaucetPayLogin"
 API_SPIN = "https://slotfruits.com/api/v1/users/earnRoll"
@@ -581,7 +610,7 @@ ADS_URL = (
 )
 
 # ═══════════════════════════════════════════════════════════════════
-# BÖLÜM 13: API FONKSİYONLARI
+# BÖLÜM 13: API FONKSİYONLARI (TÜM HATALAR DÜZELTİLDİ!)
 # ═══════════════════════════════════════════════════════════════════
 def get_session():
     s = requests.Session()
@@ -610,7 +639,7 @@ def api_login(email, password):
         return {
             "token": token,
             "user_id": user.get("_id"),
-            "balance": user.get("balance", 0),
+            "balance": float(user.get("balance", 0)),
             "credits": int(user.get("credits", 0)),
             "email": email
         }
@@ -619,18 +648,19 @@ def api_login(email, password):
         return None
 
 def api_spin_fast(info):
+    """ULTRA HIZLI spin döngüsü - HER SPİNDE ANLIK STATS GÖSTERİR"""
     token = info["token"]
     email = info["email"]
     credits = info["credits"]
     balance = info["balance"]
-    total_reward = 0
+    total_reward = 0.0
     spins = 0
     stuck = 0
     max_stuck = 3
 
     if credits <= 0:
         print(f"{T.warning}⚠️  No credits. Watch ads first!{C.RESET}")
-        return balance, credits, 0, 0
+        return balance, credits, 0, 0.0
 
     print(f"\n{T.accent}🚀 ULTRA FAST MODE: {credits} credits{C.RESET}\n")
     
@@ -642,12 +672,34 @@ def api_spin_fast(info):
                 "Accept": "application/json, text/plain, */*"
             }
             r = get_session().get(API_SPIN, headers=headers, timeout=5)
-            data = r.json()
-            reward = data.get("total", 0)
+            
+            # JSON parse hatası yakala
+            try:
+                data = r.json()
+            except Exception as json_err:
+                print(f"{T.error}⚠️  Invalid JSON: {json_err}{C.RESET}")
+                stuck += 1
+                if stuck >= max_stuck:
+                    print(f"{T.warning}⚠️  API stopped rewards{C.RESET}")
+                    break
+                time.sleep(1)
+                continue
+            
+            # API hata kontrolü
+            if data.get("error") or data.get("message") == "error":
+                print(f"{T.error}⚠️  API Error: {data.get('message', 'Unknown')}{C.RESET}")
+                stuck += 1
+                if stuck >= max_stuck:
+                    break
+                time.sleep(1)
+                continue
+            
+            reward = float(data.get("total", 0))
             u = data.get("user", {})
             new_cred = int(u.get("credits", 0))
-            new_bal = u.get("balance", balance)
+            new_bal = float(u.get("balance", balance))
 
+            # Stuck kontrolü
             if new_cred >= credits and data.get("success") is not True:
                 stuck += 1
                 if stuck >= max_stuck:
@@ -661,30 +713,32 @@ def api_spin_fast(info):
             total_reward += reward
             spins += 1
 
-            if spins % 10 == 0:
-                TerminalManager.clear()
-                print(VisualComponents.status_bar())
-                print()
-                print(Drawer.line("═", color=T.primary))
-                print(Drawer.center(f"{T.accent}{C.BOLD}🎰 SPINNING | {email}{C.RESET}"))
-                print(Drawer.line("═", color=T.primary))
-                print()
-                print(VisualComponents.stats_grid({
-                    "Balance": (balance, "💰", T.success),
-                    "Reward": (f"+{reward}", "🎁", T.accent),
-                    "Spins": (spins, "", T.info),
-                    "Total": (total_reward, "💎", T.warning),
-                    "Credits": (credits, "⏳", T.primary),
-                    "Time": (datetime.now().strftime("%H:%M:%S"), "🕐", T.dim),
-                }))
-                print()
-                print(Animator.progress_bar(min(spins * 10, 100), 40, "Progress"))
-                print()
-                if data.get("message"):
-                    print(f"{T.info}ℹ️  {data['message']}{C.RESET}")
-                print(Drawer.line("═", color=T.primary))
+            # HER SPİNDE ANLIK STATS GÖSTER (her 10 değil!)
+            TerminalManager.clear()
+            print(VisualComponents.status_bar())
+            print()
+            print(Drawer.line("═", color=T.primary))
+            print(Drawer.center(f"{T.accent}{C.BOLD}🎰 SPINNING | {email}{C.RESET}"))
+            print(Drawer.line("═", color=T.primary))
+            print()
+            print(VisualComponents.stats_grid({
+                "Balance": (f"{balance:.4f}", "💰", T.success),
+                "Last Reward": (f"+{reward:.4f}", "🎁", T.accent),
+                "Spins": (spins, "📊", T.info),
+                "Total Reward": (f"{total_reward:.4f}", "💎", T.warning),
+                "Credits Left": (credits, "⏳", T.primary),
+                "Time": (datetime.now().strftime("%H:%M:%S"), "🕐", T.dim),
+            }))
+            print()
+            print(Animator.progress_bar(min(spins * 5, 100), 40, "Cycle Progress"))
+            print()
+            if data.get("message"):
+                print(f"{T.info}ℹ️  {data['message']}{C.RESET}")
+            print(Drawer.line("═", color=T.primary))
 
+            # Ultra hızlı bekleme
             time.sleep(0.1)
+            
         except requests.exceptions.ConnectionError:
             print(f"{T.error}⚠️  Connection lost. Retrying...{C.RESET}")
             time.sleep(2)
@@ -733,50 +787,60 @@ def api_ads_fast(uid):
     except requests.exceptions.ConnectionError:
         print(f"{T.error}❌ DNS/Connection Error{C.RESET}")
     except Exception as e:
-        print(f"{T.error} Ads Error: {str(e)}{C.RESET}")
+        print(f"{T.error}❌ Ads Error: {str(e)}{C.RESET}")
         
     print(f"{T.success}✅ Ads done: {watched} watched{C.RESET}")
     return watched
 
 def process_account_247(email, password):
+    """7/24 SINIRSIZ DÖNGÜ - HİÇ DURMAZ"""
     print(f"\n{T.success}{'='*60}{C.RESET}")
     print(Drawer.center(f"{T.accent}{C.BOLD} 7/24 ULTRA FAST MODE - {email}{C.RESET}"))
     print(f"{T.success}{'='*60}{C.RESET}\n")
     
     cycle = 0
     total_spins_all = 0
-    total_reward_all = 0
+    total_reward_all = 0.0
     
-    while True:
+    while True:  # SINIRSIZ DÖNGÜ
         cycle += 1
         print(f"\n{T.primary}{'='*60}{C.RESET}")
         print(Drawer.center(f"🔄 CYCLE #{cycle} | {datetime.now().strftime('%H:%M:%S')}"))
         print(f"{T.primary}{'='*60}{C.RESET}\n")
         
+        # Giriş yap
         info = api_login(email, password)
         if not info:
-            print(f"{T.error} Login failed. Retrying in 3s...{C.RESET}")
+            print(f"{T.error}❌ Login failed. Retrying in 3s...{C.RESET}")
             time.sleep(3)
             continue
             
         print(f"{T.success}✅ Logged in | Balance: {info['balance']} | Credits: {info['credits']}{C.RESET}")
         
-        bal, cred, spins, rew = api_spin_fast(info)
-        total_spins_all += spins
-        total_reward_all += rew
+        # Spin at
+        try:
+            bal, cred, spins, rew = api_spin_fast(info)
+            total_spins_all += spins
+            total_reward_all += rew
+            print(f"\n{T.success}✅ Spins: {spins} | Reward: {rew:.4f}{C.RESET}")
+        except Exception as spin_err:
+            print(f"{T.error}❌ Spin loop error: {spin_err}{C.RESET}")
+            spins, rew = 0, 0.0
         
-        print(f"\n{T.success}✅ Spins: {spins} | Reward: {rew}{C.RESET}")
+        # Reklam izle
+        try:
+            ads = api_ads_fast(info["user_id"])
+            StatsManager.update(email, spins, rew, ads)
+            print(f"{T.success}📺 Ads: {ads} | Total Spins: {total_spins_all} | Total Reward: {total_reward_all:.4f}{C.RESET}")
+        except Exception as ads_err:
+            print(f"{T.error}❌ Ads error: {ads_err}{C.RESET}")
         
-        ads = api_ads_fast(info["user_id"])
-        StatsManager.update(email, spins, rew, ads)
-        
-        print(f"{T.success}📺 Ads: {ads} | Total Spins: {total_spins_all} | Total Reward: {total_reward_all}{C.RESET}")
-        
-        print(f"\n{T.warning} Restarting in 2s... (Ctrl+C to stop){C.RESET}")
+        # Kısa bekleme
+        print(f"\n{T.warning}⏳ Restarting in 2s... (Ctrl+C to stop){C.RESET}")
         time.sleep(2)
 
 # ═══════════════════════════════════════════════════════════════════
-# BÖLÜM 14: MENÜ SİSTEMİ
+# BÖLÜM 14: MENÜ SİSTEMİ (INPUT VALIDATION DÜZELTİLDİ!)
 # ═══════════════════════════════════════════════════════════════════
 def start_single():
     accs = AccountManager.list_all()
@@ -791,18 +855,28 @@ def start_single():
     keys = list(accs.keys())
     for i, k in enumerate(keys, 1):
         print(VisualComponents.menu_item(i, k, "📧"))
-    print(VisualComponents.menu_item(0, "Back", "️"))
+    print(VisualComponents.menu_item(0, "Back", "↩️"))
     print()
+    
     ch = input(VisualComponents.input_prompt("Choice", "▶")).strip()
     if ch == '0':
         return
+    
     try:
-        email = keys[int(ch) - 1]
-        process_account_247(email, accs[email])
+        idx = int(ch)
+        if 1 <= idx <= len(keys):
+            email = keys[idx - 1]
+            process_account_247(email, accs[email])
+        else:
+            print(f"{T.error}Invalid choice. Please select 1-{len(keys)}{C.RESET}")
+            time.sleep(1)
+    except ValueError:
+        print(f"{T.error}Invalid input. Please enter a number.{C.RESET}")
+        time.sleep(1)
     except KeyboardInterrupt:
         print(f"\n\n{T.warning}🛑 Stopped by user{C.RESET}")
-    except:
-        print(f"{T.error}Invalid choice{C.RESET}")
+    except Exception as e:
+        print(f"{T.error}Error: {str(e)}{C.RESET}")
         time.sleep(1)
 
 def start_multi():
@@ -877,7 +951,7 @@ def settings_menu():
                 f"👤 Creator: AlperenThe",
                 f"📅 Year: 2026",
                 f"🖥️  Terminal: {TerminalManager.width()}x{TerminalManager.height()}",
-                f" Theme: {current_theme.name}",
+                f"🎨 Theme: {current_theme.name}",
                 f"🐍 Python: {sys.version.split()[0]}",
                 f"📦 Requests: {requests.__version__}",
             ]
@@ -918,7 +992,7 @@ def main():
         
         items = [
             ("1", "START ONE ACCOUNT (7/24)", "🎯"),
-            ("2", "START MULTI ACCOUNT (7/24)", ""),
+            ("2", "START MULTI ACCOUNT (7/24)", "🚀"),
             ("3", "SETTINGS & ACCOUNTS", "⚙️"),
             ("4", "VIEW STATISTICS", "📊"),
             ("5", "EXIT SYSTEM", "🚪"),
