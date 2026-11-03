@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-FruitClaim Enhanced — PRO UI 24/7 Edition (FIXED)
-==================================================
-- Her cycle'da login → credit'ler sunucudan tazelenir (orijinal gibi)
-- Spin loop credit'leri gerçekten harcar
-- 7/24 sonsuz döngü + PRO terminal arayüzü
+FruitClaim Enhanced — PRO UI 24/7 Edition v2.2
+================================================
+FIX: Ads credit yazmadığında spin atlanıp cycle atlaması engellendi.
+- Ads attempts 1 → 3
+- Ads hem önce hem sonra dener
+- Login retry until credits > 0
+- Detaylı log (ne olduğunu görürsün)
 """
 
 import json
@@ -88,7 +90,7 @@ ADS_URL = (
     "&jsv=sdk_20190107_RC02-production-sdk_20251202_RC00"
 )
 
-# ───────────────────────────────────────────────── ASCII BANNER ────────
+# ───────────────────────────────────────────────── BANNER ──────────────
 BANNER = r"""
    ███████╗██████╗ ██╗   ██╗██╗████████╗    ██████╗██╗      █████╗ ██╗███╗   ███╗
    ██╔════╝██╔══██╗██║   ██║██║╚══██╔══╝   ██╔════╝██║     ██╔══██╗██║████╗ ████║
@@ -124,28 +126,21 @@ def _box_width() -> int:
 def _panel(title: str, lines: list, color: str = CYAN, icon: str = "◆") -> None:
     W = _box_width()
     inner = W - 4
-    top = color + "╔" + "═" * (W - 2) + "╗" + RESET
-    head = (
-        color + "║ " + RESET + BOLD + color
-        + f"{icon} {title}".center(inner - 2) + RESET
-        + " " + color + "║" + RESET
-    )
-    sep = color + "╟" + "─" * (W - 2) + "╢" + RESET
-    bot = color + "╚" + "═" * (W - 2) + "╝" + RESET
-    print(top)
-    print(head)
-    print(sep)
+    print(color + "╔" + "═" * (W - 2) + "╗" + RESET)
+    print(color + "║ " + RESET + BOLD + color
+          + f"{icon} {title}".center(inner - 2) + RESET
+          + " " + color + "║" + RESET)
+    print(color + "╟" + "─" * (W - 2) + "╢" + RESET)
     for line in lines:
         print(color + "║ " + RESET + _fit(line, inner) + color + " ║" + RESET)
-    print(bot)
+    print(color + "╚" + "═" * (W - 2) + "╝" + RESET)
 
 
 def progress_bar(current: float, total: float, width: int = 22) -> str:
     if total <= 0:
         return DIM + "░" * width + RESET
     filled = int(width * min(max(current / total, 0), 1))
-    bar = "█" * filled + "░" * (width - filled)
-    return f"{GREEN}{bar}{RESET}"
+    return f"{GREEN}{'█' * filled}{'░' * (width - filled)}{RESET}"
 
 
 def hr(char: str = "═", color: str = CYAN) -> str:
@@ -180,16 +175,16 @@ def spinner_bar(text: str, steps: int = 4) -> None:
 # ───────────────────────────────────────────────── STATS ──────────────
 class Stats:
     def __init__(self):
-        self.started       = datetime.now()
-        self.cycles        = 0
-        self.spins         = 0
-        self.wins          = 0
-        self.rewards       = 0.0
-        self.ads_hit       = 0
-        self.errors        = 0
-        self.logins        = 0
-        self.last_reward   = 0.0
-        self.best_reward   = 0.0
+        self.started     = datetime.now()
+        self.cycles      = 0
+        self.spins       = 0
+        self.wins        = 0
+        self.rewards     = 0.0
+        self.ads_hit     = 0
+        self.errors      = 0
+        self.logins      = 0
+        self.last_reward = 0.0
+        self.best_reward = 0.0
 
     def uptime(self) -> str:
         return str(datetime.now() - self.started).split(".")[0]
@@ -202,7 +197,7 @@ class Stats:
 
 
 STATS = Stats()
-LOG_FEED = deque(maxlen=6)
+LOG_FEED = deque(maxlen=8)
 RECENT = deque(maxlen=4)
 
 
@@ -248,7 +243,6 @@ def browser_session() -> requests.Session:
 
 # ───────────────────────────────────────────────── LOGIN ──────────────
 def login(session: requests.Session, email: str, password: str = "", retries: int = 3):
-    """Email+password dener; başarısız olursa email-only fallback."""
     payloads = [{"email": email, "password": password}, {"email": email}]
     for attempt in range(1, retries + 1):
         for payload in payloads:
@@ -265,11 +259,10 @@ def login(session: requests.Session, email: str, password: str = "", retries: in
                         user.get("balance", 0),
                         user.get("credits", 0),
                     )
-                feed(f"Login reddedildi: {data.get('message','no token')}",
-                     YELLOW, "⚠")
+                feed(f"Login red: {data.get('message','no token')}", YELLOW, "⚠")
             except Exception as e:
                 STATS.errors += 1
-                feed(f"Login hatası ({attempt}/{retries}): {e}", RED, "✖")
+                feed(f"Login hata ({attempt}/{retries}): {e}", RED, "✖")
         time.sleep(2 * attempt)
     return None, None, 0, 0
 
@@ -278,34 +271,31 @@ def login(session: requests.Session, email: str, password: str = "", retries: in
 def render(email, balance, credits, state="IDLE", progress=None, extra=None):
     clear_screen()
     print(CYAN + BANNER + RESET)
-
     tag = (
         f"{MAGENTA}╭─{RESET} {BOLD}{CYAN}SLOT MOBILE SYNDICATEBOT NET{RESET} "
-        f"{MAGENTA}─{RESET} {PINK}PRO UI EDITION{RESET} {MAGENTA}─╮{RESET}"
+        f"{MAGENTA}─{RESET} {PINK}PRO UI v2.2{FIXED}{RESET} {MAGENTA}─╮{RESET}"
     )
     print(tag.center(_box_width() + len(tag) - _vis(tag)))
 
     state_color = {
         "SPINNING": YELLOW, "LOGIN": CYAN, "ADS": ORANGE,
-        "IDLE": DIM, "ERROR": RED, "DONE": GREEN, "WAIT": BLUE,
+        "IDLE": DIM, "ERROR": RED, "WAIT": BLUE,
     }.get(state.upper(), WHITE)
-    pill = f"{state_color}● {state.upper()}{RESET}"
-    print(f"{DIM}State:{RESET} {pill}  {DIM}│{RESET}  "
+    print(f"{DIM}State:{RESET} {state_color}● {state.upper()}{RESET}  {DIM}│{RESET}  "
           f"{DIM}Clock:{RESET} {CYAN}{_ts()}{RESET}  {DIM}│{RESET}  "
           f"{DIM}Spin:{RESET} {ORANGE}{spin_char()}{RESET}")
 
-    acc_lines = [
+    acc = [
         f"{GREEN}👤 Email    :{RESET} {WHITE}{email}{RESET}",
         f"{GREEN}💰 Balance  :{RESET} {YELLOW}{balance}{RESET}",
         f"{GREEN}🎰 Credits  :{RESET} {ORANGE}{credits}{RESET}",
     ]
     if extra and extra.get("token"):
-        tok = extra["token"]
-        tok = tok[:26] + "…" if len(tok) > 26 else tok
-        acc_lines.append(f"{GREEN}🔑 Token    :{RESET} {DIM}{tok}{RESET}")
-    _panel("ACCOUNT", acc_lines, color=CYAN, icon="👤")
+        t = extra["token"]
+        acc.append(f"{GREEN}🔑 Token    :{RESET} {DIM}{t[:26]+'…' if len(t)>26 else t}{RESET}")
+    _panel("ACCOUNT", acc, CYAN, "👤")
 
-    st_lines = [
+    st = [
         f"{YELLOW}⏱  Uptime    :{RESET} {WHITE}{STATS.uptime():<16}{RESET}"
         f"{YELLOW}🔄 Cycles    :{RESET} {CYAN}{STATS.cycles}{RESET}",
         f"{YELLOW}🎰 Spins     :{RESET} {WHITE}{STATS.spins:<16}{RESET}"
@@ -317,37 +307,31 @@ def render(email, balance, credits, state="IDLE", progress=None, extra=None):
         f"{YELLOW}🔐 Logins    :{RESET} {WHITE}{STATS.logins:<16}{RESET}"
         f"{YELLOW}✅ Success   :{RESET} {GREEN}{STATS.success_rate()}{RESET}",
     ]
-    _panel("LIVE STATS", st_lines, color=MAGENTA, icon="📊")
+    _panel("LIVE STATS", st, MAGENTA, "📊")
 
     if progress is not None:
         cur, tot = progress
         bar = progress_bar(cur, tot)
         pct = (cur / tot * 100) if tot > 0 else 0
-        prog_lines = [
+        _panel("PROGRESS", [
             f"{CYAN}Credits:{RESET}  {bar}  {BOLD}{cur}/{tot}{RESET} {DIM}({pct:.0f}%){RESET}"
-        ]
-        _panel("PROGRESS", prog_lines, color=BLUE, icon="⏳")
+        ], BLUE, "⏳")
 
     if RECENT:
-        rl = []
-        for i, r in enumerate(RECENT, 1):
-            try:
-                color = LIME if float(r) > 0 else DIM
-            except Exception:
-                color = DIM
-            rl.append(f"  {DIM}{i}.{RESET} {color}+{r}{RESET}")
-        _panel("RECENT REWARDS", rl, color=GREEN, icon="🎁")
+        rl = [f"  {DIM}{i}.{RESET} {LIME if float(r)>0 else DIM}+{r}{RESET}"
+              for i, r in enumerate(RECENT, 1)]
+        _panel("RECENT REWARDS", rl, GREEN, "🎁")
 
     if LOG_FEED:
-        _panel("LIVE FEED", list(LOG_FEED), color=YELLOW, icon="📡")
+        _panel("LIVE FEED", list(LOG_FEED), YELLOW, "📡")
 
     print(hr())
 
 
 # ───────────────────────────────────────────────── SPIN ───────────────
-def normalize_credit(value) -> int:
+def normalize_credit(v) -> int:
     try:
-        return int(value)
+        return int(v)
     except (TypeError, ValueError):
         return 0
 
@@ -397,45 +381,69 @@ def run_spin_loop(session, email, token, balance, credits):
                 feed(f"🎰 Spin #{STATS.spins} → (no win)", DIM, "·")
 
         credits = new_credits
-
         if spin.get("success") is False or repeated >= 2:
-            feed("Spin durdu — credits azalmıyor.", YELLOW, "⚠")
+            feed("Spin stop — credits azalmıyor", YELLOW, "⚠")
             break
-
         time.sleep(1)
-
     return balance, credits
 
 
 # ───────────────────────────────────────────────── ADS ────────────────
-def run_ads_loop(user_id: str, attempts: int = 1) -> None:
+def run_ads_loop(session, user_id, attempts: int = 3) -> int:
+    """
+    Ads farming. attempts kadar dener. Return: toplam başarılı hit sayısı.
+    """
     if not user_id:
-        feed("Ads atlandı: user_id yok.", YELLOW, "⚠")
-        return
+        feed("Ads atlandı: user_id yok", YELLOW, "⚠")
+        return 0
 
-    feed("🚀 Ads farming başlıyor…", ORANGE, "📺")
-    session = browser_session()
+    if session is None:
+        session = browser_session()
 
-    for _ in range(attempts):
+    total_hits = 0
+    for i in range(1, attempts + 1):
+        feed(f"📺 Ads try {i}/{attempts}", ORANGE, "📺")
         try:
             r = session.get(ADS_URL, timeout=20)
             ctype = r.headers.get("Content-Type", "")
-            if "application/json" in ctype:
-                data = r.json()
-                nets = data.get("ad_networks", [])
-                if nets:
-                    for url in nets[0].get("video_reward_urls", []):
-                        p = urlparse(url)
-                        q = parse_qs(p.query, keep_blank_values=True)
-                        q["rwd_userid"] = [user_id]
-                        updated = urlunparse(p._replace(query=urlencode(q, doseq=True)))
-                        rr = session.get(updated, timeout=20)
-                        STATS.ads_hit += 1
-                        feed(f"📺 Ads Hit {rr.status_code}", GREEN, "✔")
+            if "application/json" not in ctype:
+                feed(f"Ads non-JSON ({ctype[:30] or 'none'})", YELLOW, "⚠")
+                time.sleep(3)
+                continue
+
+            data = r.json()
+            nets = data.get("ad_networks", [])
+            if not nets:
+                feed("Ads: ad_networks boş", YELLOW, "⚠")
+                time.sleep(3)
+                continue
+
+            urls = nets[0].get("video_reward_urls", [])
+            feed(f"📺 {len(urls)} reward URL alındı", CYAN, "•")
+
+            for url in urls:
+                try:
+                    p = urlparse(url)
+                    q = parse_qs(p.query, keep_blank_values=True)
+                    q["rwd_userid"] = [user_id]
+                    updated = urlunparse(p._replace(query=urlencode(q, doseq=True)))
+
+                    time.sleep(1.5)  # simulate watch time
+                    rr = session.get(updated, timeout=20)
+                    STATS.ads_hit += 1
+                    total_hits += 1
+                    body = rr.text[:100].replace("\n", " ")
+                    feed(f"📺 Ads {rr.status_code}: {body}", GREEN if rr.status_code == 200 else RED, "✔")
+                    time.sleep(0.5)
+                except Exception as e:
+                    STATS.errors += 1
+                    feed(f"Reward URL hata: {e}", RED, "✖")
         except Exception as e:
             STATS.errors += 1
-            feed(f"Ads error: {e}", RED, "✖")
+            feed(f"Ads fetch hata: {e}", RED, "✖")
         time.sleep(3)
+
+    return total_hits
 
 
 # ───────────────────────────────────────────────── MAIN LOOP ──────────
@@ -446,7 +454,7 @@ def _on_sigint(signum, frame):
     global _STOP
     _STOP = True
     print()
-    feed("⚠  Durduruluyor… mevcut cycle sonunda çıkış", YELLOW, "⏹")
+    feed("⚠  Durduruluyor… cycle sonunda çıkış", YELLOW, "⏹")
 
 
 def final_screen():
@@ -463,47 +471,87 @@ def final_screen():
         f"{GREEN}📺 Ads Hit     :{RESET} {WHITE}{STATS.ads_hit}{RESET}",
         f"{GREEN}❌ Errors      :{RESET} {RED}{STATS.errors}{RESET}",
         f"{GREEN}🔐 Logins      :{RESET} {WHITE}{STATS.logins}{RESET}",
-    ], color=GREEN, icon="🏁")
+    ], GREEN, "🏁")
     print(hr())
 
 
+def get_login_with_credits(api, email, password, max_tries=4, wait=12):
+    """
+    Login dene. credits=0 ise: ads farm + bekle + tekrar login.
+    Credit gelene kadar dener (max_tries kadar).
+    """
+    token, user_id, balance, credits = None, None, 0, 0
+    for i in range(1, max_tries + 1):
+        render(email, balance or "—", credits or "—", "LOGIN", extra={})
+        spinner_bar(f"🔐 Login try {i}/{max_tries}")
+        token, user_id, balance, credits = login(api, email, password)
+
+        if not token:
+            feed(f"Login #{i} başarısız", RED, "✖")
+            if i < max_tries:
+                time.sleep(10)
+            continue
+
+        c = normalize_credit(credits)
+        feed(f"🔐 Login #{i} OK — credits={c} balance={balance}", CYAN, "•")
+
+        if c > 0:
+            return token, user_id, balance, credits
+
+        if i >= max_tries:
+            break
+
+        # credits=0 → ads dene, bekle, tekrar login
+        feed(f"📺 Credits=0 → ads farm denemesi {i}/{max_tries-1}", ORANGE, "📺")
+        bs = browser_session()
+        run_ads_loop(bs, user_id, attempts=2)
+        feed(f"⏳ {wait}s credits bekleniyor…", BLUE, "⏱")
+        time.sleep(wait)
+
+    return token, user_id, balance, credits
+
+
 def run_forever(email: str = DEFAULT_EMAIL, password: str = DEFAULT_PASSWORD):
-    """
-    Her cycle'da YENİDEN login olur (orijinal FruitClaim davranışı).
-    Bu sayede sunucudan taze 'credits' gelir ve spin loop onları harcar.
-    """
     signal.signal(signal.SIGINT, _on_sigint)
 
     while not _STOP:
         STATS.cycles += 1
-        session = api_session()  # her cycle taze session
+        api = api_session()
 
         try:
-            # ── 1) HER CYCLE LOGIN → credits tazelenir ──
-            render(email, "—", "—", "LOGIN", extra={})
-            spinner_bar("🔐 Logging in")
-            token, user_id, balance, credits = login(session, email, password)
+            feed(f"═══ CYCLE #{STATS.cycles} başlıyor ═══", CYAN, "🔄")
+
+            # 1) Login — credits gelene kadar retry
+            token, user_id, balance, credits = get_login_with_credits(
+                api, email, password, max_tries=4, wait=12
+            )
 
             if not token:
-                feed("Login fail — 30s retry", RED, "✖")
+                feed("Login tamamen başarısız — 30s bekle", RED, "✖")
                 time.sleep(30)
                 continue
 
-            feed(f"✔ Login OK — user={user_id} credits={credits}", GREEN, "✔")
-
-            # ── 2) SPIN LOOP — credit'leri gerçekten harcar ──
+            # 2) Spin — sadece credits > 0 ise
             if normalize_credit(credits) > 0:
                 balance, credits = run_spin_loop(
-                    session, email, token, balance, credits
+                    api, email, token, balance, credits
                 )
-                feed(f"✔ Spin done — kalan credits={credits}", GREEN, "✔")
+                feed(f"✔ Spin done — remaining={credits}", GREEN, "✔")
             else:
-                feed("Credits=0 — spin atlandı, ads'e geçiliyor", YELLOW, "⚠")
+                feed("⚠️  Credits=0 — spin atlandı (ads çalışmıyor olabilir)", RED, "⚠")
 
-            # ── 3) ADS — sunucuda credit biriktirir ──
+            # 3) Ads — sonraki cycle için credit biriktir
             render(email, balance, credits, "ADS", extra={"token": token})
-            run_ads_loop(user_id)
-            feed("↻ Cycle bitti — yeniden başlıyor", CYAN, "↻")
+            bs = browser_session()
+            hits = run_ads_loop(bs, user_id, attempts=3)
+
+            if hits == 0:
+                feed("❌ Hiç ads hit yok — API ads kabul etmiyor olabilir", RED, "❌")
+                feed("   60s uzun bekleme uygulanıyor…", YELLOW, "⏱")
+                time.sleep(60)
+            else:
+                feed(f"✔ {hits} ads hit — cycle done", GREEN, "✔")
+                time.sleep(random.uniform(5, 8))
 
         except requests.exceptions.RequestException as e:
             STATS.errors += 1
@@ -513,8 +561,6 @@ def run_forever(email: str = DEFAULT_EMAIL, password: str = DEFAULT_PASSWORD):
             STATS.errors += 1
             feed(f"Unexpected: {e}", RED, "✖")
             time.sleep(10)
-
-        time.sleep(random.uniform(2, 4))
 
     final_screen()
     log("Temiz çıkış. Bye 👋", MAGENTA, "★")
@@ -530,16 +576,17 @@ if __name__ == "__main__":
             f"{GREEN}👤 Account   :{RESET} {WHITE}{DEFAULT_EMAIL}{RESET}",
             f"{GREEN}🔐 Password  :{RESET} {DIM}{'*' * len(DEFAULT_PASSWORD)}{RESET}",
             f"{GREEN}🎯 Mode      :{RESET} {CYAN}Auto-Login • 24/7 • Infinite{RESET}",
-            f"{GREEN}⚙  Engine    :{RESET} {PINK}PRO UI Edition v2.1 (FIXED){RESET}",
-            f"{GREEN}🔁 Login     :{RESET} {YELLOW}her cycle (credits refresh){RESET}",
+            f"{GREEN}⚙  Engine    :{RESET} {PINK}PRO UI v2.2{FIXED}{RESET}",
+            f"{GREEN}🔁 Login     :{RESET} {YELLOW}retry until credits>0{RESET}",
+            f"{GREEN}📺 Ads       :{RESET} {YELLOW}3 attempts per cycle{RESET}",
             "",
-            f"{YELLOW}▶ Başlamak için 3 saniye… (Ctrl+C durdur){RESET}",
-        ], color=CYAN, icon="🚀")
+            f"{YELLOW}▶ 3 saniye… (Ctrl+C durdur){RESET}",
+        ], CYAN, "🚀")
         print(hr())
         time.sleep(3)
         run_forever(DEFAULT_EMAIL, DEFAULT_PASSWORD)
     except KeyboardInterrupt:
-        print(f"\n{YELLOW}⏹  Kullanıcı tarafından durduruldu.{RESET}")
+        print(f"\n{YELLOW}⏹  Kullanıcı durdurdu.{RESET}")
         try:
             final_screen()
         except Exception:
