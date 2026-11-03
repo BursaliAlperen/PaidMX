@@ -24,7 +24,6 @@ from urllib.parse import parse_qs, urlencode, urlparse, urlunparse
 import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
-
 # ═══════════════════════════════════════════════════════════════════
 # BÖLÜM 2: RENK KODLARI
 # ═══════════════════════════════════════════════════════════════════
@@ -59,36 +58,71 @@ C = Colors()
 class Theme:
     THEMES = {
         "neon": {
-            "primary": C.CYAN, "secondary": C.MAGENTA, "accent": C.YELLOW,
-            "success": C.GREEN, "error": C.RED, "warning": C.YELLOW,
-            "info": C.BLUE, "border": C.CYAN, "text": C.WHITE, "dim": C.DIM,
+            "primary": C.CYAN,
+            "secondary": C.MAGENTA,
+            "accent": C.YELLOW,
+            "success": C.GREEN,
+            "error": C.RED,
+            "warning": C.YELLOW,
+            "info": C.BLUE,
+            "border": C.CYAN,
+            "text": C.WHITE,
+            "dim": C.DIM,
         },
         "fire": {
-            "primary": C.RED, "secondary": C.YELLOW, "accent": C.BRIGHT_RED,
-            "success": C.GREEN, "error": C.BRIGHT_RED, "warning": C.YELLOW,
-            "info": C.BLUE, "border": C.RED, "text": C.WHITE, "dim": C.DIM,
+            "primary": C.RED,
+            "secondary": C.YELLOW,
+            "accent": C.BRIGHT_RED,
+            "success": C.GREEN,
+            "error": C.BRIGHT_RED,
+            "warning": C.YELLOW,
+            "info": C.BLUE,
+            "border": C.RED,
+            "text": C.WHITE,
+            "dim": C.DIM,
         },
         "matrix": {
-            "primary": C.GREEN, "secondary": C.BRIGHT_GREEN, "accent": C.YELLOW,
-            "success": C.GREEN, "error": C.RED, "warning": C.YELLOW,
-            "info": C.GREEN, "border": C.GREEN, "text": C.BRIGHT_GREEN, "dim": C.DIM,
+            "primary": C.GREEN,
+            "secondary": C.BRIGHT_GREEN,
+            "accent": C.YELLOW,
+            "success": C.GREEN,
+            "error": C.RED,
+            "warning": C.YELLOW,
+            "info": C.GREEN,
+            "border": C.GREEN,
+            "text": C.BRIGHT_GREEN,
+            "dim": C.DIM,
         },
         "ocean": {
-            "primary": C.BLUE, "secondary": C.CYAN, "accent": C.BRIGHT_CYAN,
-            "success": C.GREEN, "error": C.RED, "warning": C.YELLOW,
-            "info": C.BLUE, "border": C.BLUE, "text": C.WHITE, "dim": C.DIM,
+            "primary": C.BLUE,
+            "secondary": C.CYAN,
+            "accent": C.BRIGHT_CYAN,
+            "success": C.GREEN,
+            "error": C.RED,
+            "warning": C.YELLOW,
+            "info": C.BLUE,
+            "border": C.BLUE,
+            "text": C.WHITE,
+            "dim": C.DIM,
         },
         "royal": {
-            "primary": C.MAGENTA, "secondary": C.BRIGHT_MAGENTA, "accent": C.YELLOW,
-            "success": C.GREEN, "error": C.RED, "warning": C.YELLOW,
-            "info": C.BLUE, "border": C.MAGENTA, "text": C.WHITE, "dim": C.DIM,
+            "primary": C.MAGENTA,
+            "secondary": C.BRIGHT_MAGENTA,
+            "accent": C.YELLOW,
+            "success": C.GREEN,
+            "error": C.RED,
+            "warning": C.YELLOW,
+            "info": C.BLUE,
+            "border": C.MAGENTA,
+            "text": C.WHITE,
+            "dim": C.DIM,
         },
     }
-
+    
     def __init__(self, name="neon"):
         self.name = name
         self.colors = self.THEMES.get(name, self.THEMES["neon"])
-
+    
     def __getattr__(self, name):
         if name in self.colors:
             return self.colors[name]
@@ -106,34 +140,39 @@ T = current_theme
 class TerminalManager:
     @staticmethod
     def width():
-        try: return shutil.get_terminal_size().columns
-        except: return 80
-
+        try:
+            return shutil.get_terminal_size().columns
+        except:
+            return 80
+    
     @staticmethod
     def height():
-        try: return shutil.get_terminal_size().lines
-        except: return 24
-
+        try:
+            return shutil.get_terminal_size().lines
+        except:
+            return 24
+    
     @staticmethod
     def clear():
         os.system("cls" if os.name == "nt" else "clear")
-
+    
     @staticmethod
     def hide_cursor():
         sys.stdout.write("\033[?25l")
         sys.stdout.flush()
-
+    
     @staticmethod
     def show_cursor():
         sys.stdout.write("\033[?25h")
         sys.stdout.flush()
-
+    
     @staticmethod
     def set_title(title):
         try:
             sys.stdout.write(f"\033]0;{title}\007")
             sys.stdout.flush()
-        except: pass
+        except:
+            pass
 
 # ═══════════════════════════════════════════════════════════════════
 # BÖLÜM 5: ÇİZİM FONKSİYONLARI
@@ -144,12 +183,12 @@ class Drawer:
         w = length or TerminalManager.width()
         c = color or T.border
         return f"{c}{char * w}{C.RESET}"
-
+    
     @staticmethod
     def center(text, width=None):
         w = width or TerminalManager.width()
         return text.center(w)
-
+    
     @staticmethod
     def fancy_box(title, content_lines, width=None):
         w = width or TerminalManager.width()
@@ -165,7 +204,7 @@ class Drawer:
             out.append(f"{T.primary}┃{C.RESET} {padded} {T.primary}┃{C.RESET}")
         out.append(f"{T.primary}┗{'━' * inner}┛{C.RESET}")
         return '\n'.join(out)
-
+    
     @staticmethod
     def divider(text="", style="double"):
         w = TerminalManager.width()
@@ -187,7 +226,7 @@ class Drawer:
 # ═══════════════════════════════════════════════════════════════════
 class Animator:
     SPINNERS = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"]
-
+    
     @staticmethod
     def spinner(text, duration=1.0, color=None):
         c = color or T.warning
@@ -200,18 +239,22 @@ class Animator:
                 i += 1
                 time.sleep(0.08)
             print(f"\r{T.success}✔ {text}{C.RESET}    ")
-        except: pass
-
+        except:
+            pass
+    
     @staticmethod
     def progress_bar(percent, width=40, label=""):
         filled = int(width * percent / 100)
         empty = width - filled
         bar = "█" * filled + "░" * empty
-        if percent < 30: color = T.error
-        elif percent < 70: color = T.warning
-        else: color = T.success
+        if percent < 30:
+            color = T.error
+        elif percent < 70:
+            color = T.warning
+        else:
+            color = T.success
         return f"{color}[{bar}]{C.RESET} {percent:3d}% {label}"
-
+    
     @staticmethod
     def loading_sequence(steps, delay=0.3):
         for step in steps:
@@ -241,11 +284,13 @@ class VisualComponents:
         out = []
         out.append(Drawer.line("═", color=T.primary))
         out.append(Drawer.center(f"{T.accent}{C.BOLD}★ {title} ★{C.RESET}", w))
-        if subtitle: out.append(Drawer.center(f"{T.text}{subtitle}{C.RESET}", w))
-        if version: out.append(Drawer.center(f"{T.dim}v{version}{C.RESET}", w))
+        if subtitle:
+            out.append(Drawer.center(f"{T.text}{subtitle}{C.RESET}", w))
+        if version:
+            out.append(Drawer.center(f"{T.dim}v{version}{C.RESET}", w))
         out.append(Drawer.line("═", color=T.primary))
         return '\n'.join(out)
-
+    
     @staticmethod
     def status_bar():
         w = TerminalManager.width()
@@ -256,12 +301,14 @@ class VisualComponents:
         content = content.ljust(w - 2)[:w - 2]
         bottom = f"{T.primary}└{C.RESET}" + f"{T.primary}─{C.RESET}" * (w - 2) + f"{T.primary}┘{C.RESET}"
         return f"{bar}\n{T.primary}│{C.RESET}{content}{T.primary}│{C.RESET}\n{bottom}"
-
+    
     @staticmethod
     def menu_item(number, text, icon="", selected=False):
-        if selected: return f"{T.accent}{C.BOLD}  [{number}] {icon} {text}{C.RESET}"
-        else: return f"{T.text}  [{number}] {icon} {text}{C.RESET}"
-
+        if selected:
+            return f"{T.accent}{C.BOLD}  [{number}] {icon} {text}{C.RESET}"
+        else:
+            return f"{T.text}  [{number}] {icon} {text}{C.RESET}"
+    
     @staticmethod
     def menu(title, items, footer=""):
         w = TerminalManager.width()
@@ -276,7 +323,7 @@ class VisualComponents:
             out.append(f"{T.dim}  {footer}{C.RESET}")
         out.append(Drawer.line("═", color=T.primary))
         return '\n'.join(out)
-
+    
     @staticmethod
     def stat_card(label, value, icon="📊", color=None):
         c = color or T.primary
@@ -286,7 +333,7 @@ class VisualComponents:
         val = f"{c}│{C.RESET} {T.accent}{C.BOLD}{str(value):<{w - 3}}{C.RESET}{c}│{C.RESET}"
         bot = f"{c}└{'─' * (w - 2)}┘{C.RESET}"
         return f"{top}\n{mid}\n{val}\n{bot}"
-
+    
     @staticmethod
     def stats_grid(stats_dict):
         cards = []
@@ -301,7 +348,7 @@ class VisualComponents:
                 row.append(cl[i] if i < len(cl) else " " * 25)
             out.append("  ".join(row))
         return '\n'.join(out)
-
+    
     @staticmethod
     def account_card(index, email, balance, credits, status="active"):
         w = 50
@@ -314,13 +361,17 @@ class VisualComponents:
         out.append(f"{border}║{C.RESET} 💰 Balance: {T.success}{str(balance):<10}{C.RESET} 🎰 Credits: {T.accent}{str(credits):<10} {border}║{C.RESET}")
         out.append(f"{border}╚{'═' * (w - 2)}╝{C.RESET}")
         return '\n'.join(out)
-
+    
     @staticmethod
     def notification(title, message, level="info"):
-        if level == "success": border, icon = T.success, "✅"
-        elif level == "error": border, icon = T.error, "❌"
-        elif level == "warning": border, icon = T.warning, "⚠️"
-        else: border, icon = T.info, "ℹ️"
+        if level == "success":
+            border, icon = T.success, "✅"
+        elif level == "error":
+            border, icon = T.error, "❌"
+        elif level == "warning":
+            border, icon = T.warning, "⚠️"
+        else:
+            border, icon = T.info, "ℹ️"
         w = 60
         out = []
         out.append(f"{border}╔{'═' * (w - 2)}╗{C.RESET}")
@@ -330,11 +381,11 @@ class VisualComponents:
         out.append(f"{border}║{C.RESET} {msg_padded} {border}║{C.RESET}")
         out.append(f"{border}╚{'═' * (w - 2)}╝{C.RESET}")
         return '\n'.join(out)
-
+    
     @staticmethod
     def input_prompt(label, icon="▶"):
         return f"{T.accent}{icon} {label}: {C.RESET}"
-
+    
     @staticmethod
     def splash_screen():
         w = TerminalManager.width()
@@ -365,7 +416,8 @@ class Effects:
                 print(f"\r{line}", end="", flush=True)
                 time.sleep(0.1)
             print()
-        except: pass
+        except:
+            pass
 
 # ═══════════════════════════════════════════════════════════════════
 # BÖLÜM 10: İSTATİSTİK YÖNETİMİ
@@ -373,14 +425,14 @@ class Effects:
 class StatsManager:
     STATS_FILE = "bot_stats.json"
     ACCOUNTS_FILE = "accounts.json"
-
+    
     FIELD_ALIASES = {
         "spins": ("spins", "total_spins", "spin_count", "totalSpins", "spinCount", "rolls"),
         "reward": ("reward", "total_reward", "rewards", "totalReward", "earned", "total_earned"),
         "ads": ("ads", "total_ads", "ad_views", "ads_watched", "totalAds", "adViews"),
         "sessions": ("sessions", "session_count", "total_sessions", "totalSessions"),
     }
-
+    
     @staticmethod
     def _finite_number(value, default=0.0):
         try:
@@ -388,7 +440,7 @@ class StatsManager:
             return number if math.isfinite(number) else default
         except (TypeError, ValueError, OverflowError):
             return default
-
+    
     @staticmethod
     def normalize_record(record):
         normalized = dict(record) if isinstance(record, dict) else {}
@@ -408,7 +460,7 @@ class StatsManager:
                     break
         normalized.setdefault("last_run", "")
         return normalized
-
+    
     @staticmethod
     def load_json(file):
         if os.path.exists(file):
@@ -419,7 +471,7 @@ class StatsManager:
             except (OSError, json.JSONDecodeError, UnicodeDecodeError):
                 return {}
         return {}
-
+    
     @staticmethod
     def save_json(file, data):
         temp_name = None
@@ -444,7 +496,7 @@ class StatsManager:
                     pass
             print(f"{T.error}Save error: {e}{C.RESET}")
             return False
-
+    
     @staticmethod
     def update(email, spins, reward, ads):
         stats = StatsManager.load_json(StatsManager.STATS_FILE)
@@ -456,7 +508,7 @@ class StatsManager:
         current["last_run"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         stats[email] = current
         return StatsManager.save_json(StatsManager.STATS_FILE, stats)
-
+    
     @staticmethod
     def get_all():
         raw = StatsManager.load_json(StatsManager.STATS_FILE)
@@ -465,7 +517,7 @@ class StatsManager:
             for email, record in raw.items()
             if isinstance(record, dict)
         }
-
+    
     @staticmethod
     def display_dashboard():
         stats = StatsManager.get_all()
@@ -494,7 +546,7 @@ class StatsManager:
             print(VisualComponents.account_card(
                 index, email, record["reward"], record["spins"], "active"
             ))
-        print()
+            print()
         print(Drawer.line("═", color=T.primary))
         input(f"\n{T.accent}Press Enter to continue...{C.RESET}")
 
@@ -505,17 +557,17 @@ class AccountManager:
     @staticmethod
     def load():
         return StatsManager.load_json(StatsManager.ACCOUNTS_FILE)
-
+    
     @staticmethod
     def save(accs):
         StatsManager.save_json(StatsManager.ACCOUNTS_FILE, accs)
-
+    
     @staticmethod
     def add(email, password):
         accs = AccountManager.load()
         accs[email] = password
         AccountManager.save(accs)
-
+    
     @staticmethod
     def remove(email):
         accs = AccountManager.load()
@@ -524,11 +576,11 @@ class AccountManager:
             AccountManager.save(accs)
             return True
         return False
-
+    
     @staticmethod
     def list_all():
         return AccountManager.load()
-
+    
     @staticmethod
     def display():
         accs = AccountManager.list_all()
@@ -548,7 +600,7 @@ class AccountManager:
                 print(f"{T.dim}  🔑 Password: {masked}{C.RESET}")
                 print()
         print(Drawer.line("═", color=T.primary))
-
+    
     @staticmethod
     def menu_loop():
         while True:
@@ -600,39 +652,9 @@ class AccountManager:
 # ═══════════════════════════════════════════════════════════════════
 API_LOGIN = "https://slotfruits.com/api/v1/users/signupFaucetPayLogin"
 API_SPIN = "https://slotfruits.com/api/v1/users/earnRoll"
-ADS_URL_BASE = (
-    "https://googleads.g.doubleclick.net/mads/gma?submodel=SM-A217F"
-    "&adid_p=1&format=interstitial_mb"
-    "&ini_pn=com.google.android.packageinstaller"
-    "&ins_pn=com.google.android.packageinstaller"
-    "&omid_v=a.1.5.2-google_20241009"
-    "&dv=254380203&ev=24.6.0&gl=ID&hl=in"
-    "&js=afma-sdk-a-v254380999.253410000.1"
-    "&kw=clothing%2Cfashion&lv=253410000"
-    "&ms=CqgFmsA_ATEaQQHY5dWIJ1nnZI0TXJOCrRjxy3oie3ZsfYBDue5jJF2CTFQQuf7W9C9KnP8xbLx0FI_PC-5wIrw0itcrK2KvDP4iEt0E6Yp1pn72NO8vWhbzh19JnXz5v7gGWsohjScUvkVohNO_jbecHUPYSmq4yT-WuJZ2EFv8_r-2HeMQg4ZPiq_jwKyeOrQjsiRXsU8vcZpKSMI0Z7Pn6iha94ABhZW_FbLysDgYt2ox4f_FIffLSbr_vjYntwKQpTg44MpacMRJ2_Ch0aplBuEzXYGkOTHBpg58oZtEw_3nZ8wsO9jE5lLVvx_cmKmOEpfemdesE_wTXvV0Hv5MWrZQ2I4ulXfQrY_gKRBI5ivJJLh3XYIzgBBRhoZastP7yEVFBT7Y8iunIsK3VrABvtw9RWUDkE2lETA0ezNEzwFoAhoGTGHuS2JaZ68x68KZGPFPR1CX4CXbMf1DDtzECiUr12lOsiuPUQ2WWtrjma3PKtkBk-0B5HoTVviRRPOHqgth3x80sbtwMn4G95El7JP079-e_jUT0oa75oJQC-Ph3zmllppvqq3dJN_RCGbyELdXc042fsR1fi3Syd6w1SJROO_t2sP3o2Bdzn2_jv1aokWO8NAzbtrWUs64BUiv1-XMv3k6CReZ91Ac9T28vbfulD8b_t8WSPrIHmXCGEC4h50U74SHhRxUcOmlR7sWpB2y8WfC7NlfoGCG5r6vXzVpG1oFOvTYscbEq1GPl1SjpnwS00RVM5_wfwa6GKc53oRubkV-CBhU_KMXUN115FELhAaNab2qn8reOKeN6xdg_OkZjGgHml1GIlVQity3vBcbzP2yE898LCwcwXVc9oLcH_WHL1eb7K19Z6f5kpquk35qGtTP3xrSzDcw6t-GAxGg1lTCxlMgBA"
-    "&mv=84923430.com.android.vending&lft=1&vnm=1.1.6&plbs=0&plcs=0"
-    "&u_sd=1.75&request_id=1267448703&target_api=35&carrier=51011"
-    "&request_agent=rn-invertase-15.8.0&seq_num=2"
-    "&eid=318500618,318486317,318491267,318503826,318509511,318509849,318515546,318518927,318527162,318482080,318483611,318484497,318484801,318525018,318526145,318526848"
-    "&guci=0.0.0.0.0.0.0.0&sdk_apis=7%2C8"
-    "&omid_p=Google%2Fafma-sdk-a-v260480999.253410000.1&cap=m"
-    "&u_w=412&u_h=828&msid=com.piratebaixe.slotMobile"
-    "&an=17.android.com.spincoin.appmobile.top&u_audio=3&net=ed&u_so=p&rbv=1"
-    "&loeid=44766145%2C318502926&preqs_in_session=1&preqs=1&time_in_session=70&pcc=0"
-    "&sst=1766181420000&output=html&region=mobile_app&u_tz=420"
-    "&client=ca-app-pub-5674874137587223&slotname=7114498212&kw_type=broad&gsb=4g&lite=0"
-    "&app_wp_code=ca-app-pub-5674874137587223&app_code=5186053460&num_ads=1"
-    "&vpt=8&vfmt=18&vst=0&sdkv=o.254380999.253410000.1&sdmax=0&dmax=1&sdki=3c4d"
-    "&stbg=1&bisch=true&blev=0.16&canm=true&_mv=84923430.com.android.vending"
-    "&heap_free=35837248&heap_max=268435456&heap_total=67108864&wv_count=0&rdps=5500"
-    "&caps=inlineVideo_interactiveVideo_mraid1_mraid2_mraid3_sdkVideo_exo3_th_autoplay_mediation_scroll_av_transparentBackground_sdkAdmobApiForAds_di_aso_sfv_dinm_dim_nav_navc_dinmo_ipd_of_gls_gcache_saiMacro_sai_demuxedGcache_xSeconds"
-    "&is_lat=false"
-    "&blob=ABPQqLFPLHz2k6c8n6CqX1sW26j7BjCjFG5-MaUl0CxgLB41Sc1B8kpJWaikL2C_Gp9pl25Xd46LPjDMkuzcNeNk1dvygLdxMwK-Y6rlwJbBvC5njmNuysN-8h288vPObPEuoucf6F2FyhorQbQv9YbRKuFGXNMnm3mLs9x1FneK3ofa6gCK_UTEhPBLeTogM4C8tHMwO2a7T816OsKSD0JYRvo61pYUj8Rx-RsJMnAhHhTzRs3ktQdg-BbwRWiEaPEswxrDeM_GpknK8GoDLzwQ_wuTxQDlAIhl0WIPz9VciYotTXJ86Pe3o5uMwqNeQhZ_qFNQWL_Rncwnb9idfxUEGM5ucxxK_zjofg8F"
-    "&jsv=sdk_20190107_RC02-production-sdk_20251202_RC00"
-)
 
 # ═══════════════════════════════════════════════════════════════════
-# BÖLÜM 13: API FONKSİYONLARI
+# BÖLÜM 13: API FONKSİYONLARI (7/24 KESİNTİSİZ)
 # ═══════════════════════════════════════════════════════════════════
 def get_session():
     session = requests.Session()
@@ -641,54 +663,6 @@ def get_session():
     session.mount("https://", adapter)
     session.mount("http://", adapter)
     return session
-
-class RateLimitError(Exception):
-    MAX_RATE_LIMIT_WAIT = 24 * 60 * 60
-    DEFAULT_RATE_LIMIT_WAIT = 300
-
-def retry_after_seconds(response):
-    value = (getattr(response, "headers", {}) or {}).get("Retry-After")
-    if not value:
-        return RateLimitError.DEFAULT_RATE_LIMIT_WAIT
-    try:
-        return max(1, int(value.strip()))
-    except (AttributeError, TypeError, ValueError):
-        pass
-    try:
-        target = parsedate_to_datetime(value)
-        if target.tzinfo is None:
-            target = target.replace(tzinfo=timezone.utc)
-        now = datetime.now(timezone.utc)
-        return max(1, math.ceil((target - now).total_seconds()))
-    except (TypeError, ValueError, OverflowError):
-        return RateLimitError.DEFAULT_RATE_LIMIT_WAIT
-
-def wait_with_countdown(seconds):
-    remaining = max(0, int(seconds))
-    while remaining:
-        mins, secs = divmod(remaining, 60)
-        print(
-            f"\r{T.warning}⏳ 429 beklemesi: {mins:02d}:{secs:02d} kaldı "
-            f"(Ctrl+C ile durdur){C.RESET}", end="", flush=True
-        )
-        time.sleep(1)
-        remaining -= 1
-    print(f"\r{T.success}✔ Bekleme tamamlandı; tek bir tekrar denemesi yapılacak.{C.RESET}                    ")
-
-def wait_once_for_429(response, operation):
-    seconds = retry_after_seconds(response)
-    if seconds > RateLimitError.MAX_RATE_LIMIT_WAIT:
-        message = (
-            f"Sunucu {seconds} saniyeden uzun bekleme istedi; güvenli üst sınır "
-            f"{RateLimitError.MAX_RATE_LIMIT_WAIT} saniye. {operation} durduruldu."
-        )
-        print(f"{T.error}⏹️ {message}{C.RESET}")
-        raise RateLimitError(message)
-    print(
-        f"{T.warning}⏳ Sunucu istekleri sınırladı (429). "
-        f"{seconds} saniye bekleniyor.{C.RESET}"
-    )
-    wait_with_countdown(seconds)
 
 def api_login(email, password):
     payload = {"email": email.strip(), "password": password.strip()}
@@ -699,29 +673,34 @@ def api_login(email, password):
     }
     session = get_session()
     try:
-        for attempt in range(2):
+        while True:
             Animator.spinner("Authenticating", duration=0.8, color=T.accent)
             try:
                 resp = session.post(API_LOGIN, json=payload, headers=headers, timeout=10)
+                
                 if resp.status_code == 429:
-                    if attempt == 0:
-                        wait_once_for_429(resp, "Giriş")
-                        continue
-                    message = "Bekleme sonrası da 429 geldi. Giriş durduruldu."
-                    print(f"{T.error}❌ {message}{C.RESET}")
-                    raise RateLimitError(message)
+                    print(f"\r{T.warning}⚠️ 429 Rate Limit - 2 saniye beklenip tekrar denenecek...{C.RESET}")
+                    time.sleep(2)
+                    continue
+                
                 resp.raise_for_status()
                 data = resp.json()
+                
                 if not isinstance(data, dict):
-                    print(f"{T.error}❌ Login yanıtı JSON değil.{C.RESET}")
-                    return None
+                    print(f"{T.error}❌ Login yanıtı beklenen JSON biçiminde değil.{C.RESET}")
+                    time.sleep(2)
+                    continue
+                
                 token = data.get("token")
                 user = data.get("user") or {}
                 if not isinstance(user, dict):
                     user = {}
+                
                 if not token:
-                    print(f"{T.error}❌ Token yok.{C.RESET}")
-                    return None
+                    print(f"{T.error}❌ Login yanıtında token yok.{C.RESET}")
+                    time.sleep(2)
+                    continue
+                
                 return {
                     "token": token,
                     "user_id": user.get("_id"),
@@ -729,17 +708,18 @@ def api_login(email, password):
                     "credits": max(0, int(StatsManager._finite_number(user.get("credits", 0)))),
                     "email": email
                 }
-            except RateLimitError:
-                raise
+                
             except requests.exceptions.RequestException as e:
-                print(f"{T.error}❌ Login Error: {e}{C.RESET}")
-                return None
+                print(f"{T.error}❌ Login Error: {e} - 3 saniye sonra tekrar denenecek...{C.RESET}")
+                time.sleep(3)
             except (ValueError, TypeError) as e:
-                print(f"{T.error}❌ Login yanıtı okunamadı: {e}{C.RESET}")
-                return None
+                print(f"{T.error}❌ Login yanıtı okunamadı: {e} - 2 saniye sonra tekrar denenecek...{C.RESET}")
+                time.sleep(2)
             except Exception as e:
-                print(f"{T.error}❌ Login Error: {e}{C.RESET}")
-                return None
+                print(f"{T.error}❌ Login Error: {e} - 3 saniye sonra tekrar denenecek...{C.RESET}")
+                time.sleep(3)
+                
+    except KeyboardInterrupt:
         return None
     finally:
         session.close()
@@ -751,58 +731,61 @@ def api_spin_fast(info):
     balance = StatsManager._finite_number(info.get("balance", 0))
     total_reward = 0.0
     spins = 0
+    
     if credits <= 0:
-        print(f"{T.warning}⚠️  Kredi yok. Spin yapılmayacak.{C.RESET}")
+        print(f"{T.warning}⚠️  Kullanılabilir kredi yok. Spin/reklam isteği gönderilmeyecek.{C.RESET}")
         return balance, 0, 0, 0.0
+    
     print(f"\n{T.accent}🚀 Spin başlıyor: {credits} kredi{C.RESET}\n")
+    
     headers = {
         "Authorization": f"Bearer {token}",
         "User-Agent": "okhttp/4.12.0",
         "Accept": "application/json, text/plain, */*"
     }
+    
     session = get_session()
-    rate_limit_retried = False
-    consecutive_failures = 0
-    max_failures = 3
+    
     try:
         while credits > 0:
             try:
                 response = session.get(API_SPIN, headers=headers, timeout=10)
+                
                 if response.status_code == 429:
-                    if rate_limit_retried:
-                        message = "Spin 429 aldı; döngü durduruldu."
-                        print(f"{T.error}⏹️ {message}{C.RESET}")
-                        raise RateLimitError(message)
-                    rate_limit_retried = True
-                    wait_once_for_429(response, "Spin")
+                    print(f"\r{T.warning}⚠️ 429 Rate Limit - 2 saniye beklenip devam edilecek...{C.RESET}")
+                    time.sleep(2)
                     continue
+                
                 response.raise_for_status()
                 data = response.json()
+                
                 if not isinstance(data, dict):
-                    raise ValueError("API yanıtı JSON değil")
+                    raise ValueError("API yanıtı JSON nesnesi değil")
+                
                 if data.get("error") or data.get("message") == "error":
-                    print(f"{T.error}⚠️  API hatası: {data.get('message', 'Bilinmeyen')}{C.RESET}")
-                    break
+                    print(f"{T.error}⚠️  API hatası: {data.get('message', 'Bilinmeyen hata')} - Devam ediliyor...{C.RESET}")
+                    time.sleep(2)
+                    continue
+                
                 user = data.get("user") or {}
                 if not isinstance(user, dict):
                     user = {}
+                
                 new_credits = max(0, int(StatsManager._finite_number(user.get("credits", credits))))
                 new_balance = StatsManager._finite_number(user.get("balance", balance), balance)
                 success = data.get("success") is True
+                
                 if not success and new_credits >= credits:
-                    consecutive_failures += 1
-                    print(f"{T.warning}⚠️  Spin onaylanmadı; tekrar {consecutive_failures}/{max_failures}.{C.RESET}")
-                    if consecutive_failures >= max_failures:
-                        print(f"{T.warning}⚠️  API başarılı spin bildirmedi; döngü durduruldu.{C.RESET}")
-                        break
+                    print(f"{T.warning}⚠️  Spin onaylanmadı - 1 saniye beklenip devam ediliyor...{C.RESET}")
                     time.sleep(1)
                     continue
-                consecutive_failures = 0
+                
                 reward = StatsManager._finite_number(data.get("total", 0))
                 credits = new_credits
                 balance = new_balance
                 total_reward += reward
                 spins += 1
+                
                 TerminalManager.clear()
                 print(VisualComponents.status_bar())
                 print()
@@ -821,162 +804,95 @@ def api_spin_fast(info):
                 print()
                 print(Animator.progress_bar(min(spins * 5, 100), 40, "Cycle Progress"))
                 print()
+                
                 if data.get("message"):
                     print(f"{T.info}ℹ️  {data['message']}{C.RESET}")
+                
                 print(Drawer.line("═", color=T.primary))
+                
                 if credits > 0:
                     time.sleep(0.1)
-            except RateLimitError:
-                raise
+                    
             except requests.exceptions.RequestException as e:
-                consecutive_failures += 1
-                print(f"{T.error}⚠️  Ağ hatası ({consecutive_failures}/{max_failures}): {e}{C.RESET}")
-                if consecutive_failures >= max_failures:
-                    print(f"{T.error}⏹️  Tekrarlanan ağ hataları; döngü durduruldu.{C.RESET}")
-                    break
-                time.sleep(min(2 * consecutive_failures, 5))
+                print(f"{T.error}⚠️  Ağ isteği başarısız: {e} - 3 saniye sonra tekrar denenecek...{C.RESET}")
+                time.sleep(3)
             except (ValueError, TypeError, OverflowError) as e:
-                consecutive_failures += 1
-                print(f"{T.error}⚠️  Yanıt geçersiz ({consecutive_failures}/{max_failures}): {e}{C.RESET}")
-                if consecutive_failures >= max_failures:
-                    print(f"{T.error}⏹️  Tekrarlanan geçersiz yanıtlar; döngü durduruldu.{C.RESET}")
-                    break
-                time.sleep(1)
+                print(f"{T.error}⚠️  Spin yanıtı geçersiz: {e} - 2 saniye sonra tekrar denenecek...{C.RESET}")
+                time.sleep(2)
+            except KeyboardInterrupt:
+                break
+                
     finally:
         session.close()
+    
     return balance, credits, spins, total_reward
 
-def api_ads_fast(uid, max_ads=3):
-    """OTOMATİK REKLAM İZLEME - Orijinal dosyadaki gibi"""
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Linux; Android 12; SM-A217F Build/SP1A.210812.016; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/147.0.7727.111 Mobile Safari/537.36",
-        "sec-ch-ua-platform": '"Android"',
-        "sec-ch-ua": '"Android WebView";v="147", "Not.A/Brand";v="8", "Chromium";v="147"',
-        "sec-ch-ua-mobile": "?1",
-        "x-requested-with": "com.piratebaixe.slotMobile",
-        "sec-fetch-site": "same-origin",
-        "sec-fetch-mode": "cors",
-        "sec-fetch-dest": "empty",
-        "referer": "https://googleads.g.doubleclick.net/mads/static/sdk/native/sdk-core-v40.html",
-        "accept-language": "id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7",
-        "priority": "u=1, i",
-        "Cookie": "IDE=AHWqTUmPTIJAy-Z7wZUR-Si3c3uYRcuBwUfjmr_ffdlWQMrcruxMTVUyL8XPtA-y_Dk",
-    }
-    print(f"\n{T.cyan}{'='*60}{C.RESET}")
-    print(f"{T.yellow}🚀 Otomatik Reklam İzleme Başlıyor...{C.RESET}")
-    print(f"{T.cyan}{'='*60}{C.RESET}\n")
-    ads_watched = 0
-    session = get_session()
-    for i in range(max_ads):
-        try:
-            Animator.spinner(f"Reklam {i+1}/{max_ads} yükleniyor", duration=1.0, color=T.accent)
-            response = session.get(ADS_URL_BASE, headers=headers, timeout=10)
-            if "application/json" in response.headers.get("Content-Type", ""):
-                data = response.json()
-                ad_networks = data.get("ad_networks", [])
-                if ad_networks:
-                    video_reward_urls = ad_networks[0].get("video_reward_urls", [])
-                    for video_url in video_reward_urls:
-                        parsed_url = urlparse(video_url)
-                        query_parameters = parse_qs(parsed_url.query, keep_blank_values=True)
-                        query_parameters["rwd_userid"] = [uid]
-                        updated_url = urlunparse(
-                            parsed_url._replace(query=urlencode(query_parameters, doseq=True))
-                        )
-                        reward_response = session.get(updated_url, headers=headers, timeout=10)
-                        ads_watched += 1
-                        print(f"{T.green}✔ Reklam {ads_watched} izlendi (Status: {reward_response.status_code}){C.RESET}")
-                        time.sleep(2)
-        except Exception as e:
-            print(f"{T.red}❌ Reklam hatası: {str(e)}{C.RESET}")
-        time.sleep(3)
-    session.close()
-    print(f"\n{T.green}✅ Reklam izleme tamamlandı: {ads_watched} reklam{C.RESET}\n")
-    return ads_watched
+def api_ads_fast(uid):
+    print(f"{T.warning}⚠️  Automated ad requests are disabled. Watch ads via the official app.{C.RESET}")
+    return 0
 
 def process_account_247(email, password):
-    """Kredi 0 olunca OTOMATİK reklam izler ve devam eder"""
     print(f"\n{T.success}{'='*60}{C.RESET}")
     print(Drawer.center(f"{T.accent}{C.BOLD} FruitClaim - {email}{C.RESET}"))
     print(f"{T.success}{'='*60}{C.RESET}\n")
+    
     cycle = 0
     total_spins_all = 0
     total_reward_all = 0.0
-    total_ads_all = 0
+    
     while True:
         cycle += 1
+        
         if cycle % 5 == 1:
             TerminalManager.clear()
             print(f"\n{T.primary}{'='*60}{C.RESET}")
             print(Drawer.center(f"🔄 CYCLE #{cycle} | {datetime.now().strftime('%H:%M:%S')}"))
             print(f"{T.primary}{'='*60}{C.RESET}\n")
-        try:
-            info = api_login(email, password)
-        except RateLimitError:
-            print(f"{T.error}⏹️ Rate limit; hesap durduruldu.{C.RESET}")
-            break
+        
+        info = api_login(email, password)
+        
         if not info:
-            print(f"{T.error}❌ Giriş başarısız; hesap durduruldu.{C.RESET}")
-            break
+            print(f"{T.error}❌ Giriş başarısız - 5 saniye sonra tekrar denenecek...{C.RESET}")
+            time.sleep(5)
+            continue
+        
         print(f"{T.success}✅ Giriş başarılı | Bakiye: {info['balance']} | Kredi: {info['credits']}{C.RESET}")
+        
         credits = max(0, int(StatsManager._finite_number(info.get("credits", 0))))
-        user_id = info.get("user_id")
-        # KREDİ 0 İSE OTOMATİK REKLAM İZLE
+        
         if credits <= 0:
-            print(f"\n{T.warning}⚠️  Kredi 0! Otomatik reklam izleniyor...{C.RESET}\n")
-            if user_id:
-                ads_watched = api_ads_fast(user_id, max_ads=3)
-                total_ads_all += ads_watched
-                print(f"{T.info}📺 {ads_watched} reklam izlendi. Tekrar giriş yapılıyor...{C.RESET}\n")
-                time.sleep(2)
-                # Tekrar giriş yap ve kredi kontrol et
-                try:
-                    refreshed_info = api_login(email, password)
-                except RateLimitError:
-                    print(f"{T.error}⏹️ Kredi doğrulaması rate limit.{C.RESET}")
-                    break
-                if not refreshed_info:
-                    print(f"{T.error}❌ Kredi doğrulanamadı.{C.RESET}")
-                    break
-                refreshed_credits = max(0, int(StatsManager._finite_number(refreshed_info.get("credits", 0))))
-                if refreshed_credits <= 0:
-                    print(f"{T.warning}⏹️ Reklam sonrası kredi hâlâ 0. Döngüye devam ediliyor...{C.RESET}\n")
-                    time.sleep(5)
-                    continue  # Başa dön, tekrar dene
-                info = refreshed_info
-                credits = refreshed_credits
-                print(f"{T.success}✅ Kredi geldi: {credits}. Spinlere devam ediliyor.{C.RESET}\n")
-            else:
-                print(f"{T.error}❌ User ID yok, reklam izlenemiyor.{C.RESET}\n")
-                time.sleep(5)
-                continue
-        # SPİN YAP
+            print(f"{T.warning}⏹️ Kredi 0 - 30 saniye beklenip tekrar denenecek...{C.RESET}")
+            time.sleep(30)
+            continue
+        
         spins = 0
         reward = 0.0
-        remaining_credits = credits
-        rate_limited = False
+        
         try:
             _, remaining_credits, spins, reward = api_spin_fast(info)
             total_spins_all += spins
             total_reward_all += reward
             print(f"\n{T.success}✅ Spin: {spins} | Ödül: {reward}{C.RESET}")
-        except RateLimitError:
-            rate_limited = True
-            print(f"{T.error}⏹️ Rate limit; hesap durduruldu.{C.RESET}")
         except Exception as spin_err:
-            print(f"{T.error}❌ Spin hatası: {spin_err}{C.RESET}")
-        # İstatistik kaydet
+            print(f"{T.error}❌ Spin döngüsü hatası: {spin_err} - 5 saniye sonra tekrar denenecek...{C.RESET}")
+            time.sleep(5)
+            continue
+        
         ads = 0
+        
         try:
             StatsManager.update(email, spins, reward, ads)
-            print(f"{T.success}📊 Toplam spin: {total_spins_all} | Toplam ödül: {total_reward_all} | Toplam reklam: {total_ads_all}{C.RESET}")
+            print(f"{T.success}📺 Otomatik reklam: devre dışı | Toplam spin: {total_spins_all} | Toplam ödül: {total_reward_all}{C.RESET}")
         except Exception as stats_err:
-            print(f"{T.error}❌ İstatistik hatası: {stats_err}{C.RESET}")
-        if rate_limited:
-            break
-        # Yeni çevrime geç
-        print(f"\n{T.warning}⏳ Yeni çevrimden önce 10 saniye bekleniyor...{C.RESET}")
-        wait_with_countdown(10)
+            print(f"{T.error}❌ İstatistik kaydetme hatası: {stats_err}{C.RESET}")
+        
+        if remaining_credits <= 0:
+            print(f"{T.warning}⏹️ Kullanılabilir kredi kalmadı - 30 saniye beklenip yeni çevrim başlatılacak...{C.RESET}")
+            time.sleep(30)
+            continue
+        
+        print(f"\n{T.warning}⏳ Yeni çevrimden önce 5 saniye bekleniyor...{C.RESET}")
+        time.sleep(5)
 
 # ═══════════════════════════════════════════════════════════════════
 # BÖLÜM 14: MENÜ SİSTEMİ
@@ -987,6 +903,7 @@ def start_single():
         print(VisualComponents.notification("ERROR", "No accounts! Add one in Settings", "error"))
         time.sleep(2)
         return
+    
     TerminalManager.clear()
     print(VisualComponents.header("SELECT ACCOUNT", "Choose an account to run", "7.0"))
     print()
@@ -995,22 +912,24 @@ def start_single():
         print(VisualComponents.menu_item(i, k, "📧"))
     print(VisualComponents.menu_item(0, "Back", "↩️"))
     print()
+    
     ch = input(VisualComponents.input_prompt("Choice", "▶")).strip()
     if ch == '0':
         return
+    
     try:
         idx = int(ch)
         if 1 <= idx <= len(keys):
             email = keys[idx - 1]
             process_account_247(email, accs[email])
         else:
-            print(f"{T.error}Invalid choice.{C.RESET}")
+            print(f"{T.error}Invalid choice. Please select 1-{len(keys)}{C.RESET}")
             time.sleep(1)
     except ValueError:
-        print(f"{T.error}Invalid input.{C.RESET}")
+        print(f"{T.error}Invalid input. Please enter a number.{C.RESET}")
         time.sleep(1)
     except KeyboardInterrupt:
-        print(f"\n{T.warning}🛑 Stopped{C.RESET}")
+        print(f"\n{T.warning}🛑 Stopped by user{C.RESET}")
     except Exception as e:
         print(f"{T.error}Error: {str(e)}{C.RESET}")
         time.sleep(1)
@@ -1021,17 +940,20 @@ def start_multi():
         print(VisualComponents.notification("ERROR", "No accounts!", "error"))
         time.sleep(2)
         return
+    
     TerminalManager.clear()
     print(VisualComponents.header("MULTI-ACCOUNT MODE", f"Processing {len(accs)} accounts", "7.0"))
     print()
-    print(VisualComponents.notification("INFO", "Starting all accounts...", "info"))
+    print(VisualComponents.notification("INFO", "Starting all accounts sequentially...", "info"))
     print()
+    
     for email, pwd in accs.items():
         try:
             process_account_247(email, pwd)
         except KeyboardInterrupt:
-            print(f"\n{T.warning}🛑 Stopped{C.RESET}")
+            print(f"\n{T.warning}🛑 Stopped by user{C.RESET}")
             break
+    
     print()
     Effects.confetti(duration=1.5)
     print(VisualComponents.notification("SUCCESS", "All accounts processed!", "success"))
@@ -1051,7 +973,9 @@ def settings_menu():
         ]
         print(VisualComponents.menu("SETTINGS", items))
         print()
+        
         ch = input(VisualComponents.input_prompt("Choice", "▶")).strip()
+        
         if ch == '1':
             AccountManager.menu_loop()
         elif ch == '2':
@@ -1067,7 +991,7 @@ def settings_menu():
                 global current_theme, T
                 current_theme = Theme(themes[int(th_ch) - 1])
                 T = current_theme
-                print(VisualComponents.notification("SUCCESS", f"Theme: {themes[int(th_ch)-1]}", "success"))
+                print(VisualComponents.notification("SUCCESS", f"Theme changed to {themes[int(th_ch)-1]}", "success"))
                 time.sleep(1)
             except:
                 print(f"{T.error}Invalid{C.RESET}")
@@ -1107,6 +1031,7 @@ def main():
     ], delay=0.3)
     time.sleep(0.5)
     Effects.confetti(duration=0.8)
+    
     while True:
         TerminalManager.clear()
         print(VisualComponents.status_bar())
@@ -1124,9 +1049,11 @@ def main():
             ("4", "VIEW STATISTICS", "📊"),
             ("5", "EXIT SYSTEM", "🚪"),
         ]
-        print(VisualComponents.menu("MAIN MENU", items, "Select an option"))
+        print(VisualComponents.menu("MAIN MENU", items, "Select an option to continue"))
         print()
+        
         ch = input(VisualComponents.input_prompt("Select Option", "▶")).strip()
+        
         if ch == '1':
             start_single()
         elif ch == '2':
@@ -1155,7 +1082,7 @@ if __name__ == "__main__":
         main()
     except KeyboardInterrupt:
         TerminalManager.show_cursor()
-        print(f"\n{T.warning}🛑 Stopped{C.RESET}")
+        print(f"\n{T.warning}🛑 Stopped by user{C.RESET}")
     except Exception as e:
         TerminalManager.show_cursor()
         print(f"\n{T.error}💥 Fatal: {str(e)}{C.RESET}")
