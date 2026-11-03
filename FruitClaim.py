@@ -679,8 +679,8 @@ def api_login(email, password):
                 resp = session.post(API_LOGIN, json=payload, headers=headers, timeout=10)
                 
                 if resp.status_code == 429:
-                    print(f"\r{T.warning}⚠️ 429 Rate Limit - 2 saniye beklenip tekrar denenecek...{C.RESET}")
-                    time.sleep(2)
+                    print(f"\r{T.warning}⚠️ 429 Rate Limit - 1 saniye beklenip tekrar denenecek...{C.RESET}")
+                    time.sleep(1)
                     continue
                 
                 resp.raise_for_status()
@@ -688,7 +688,7 @@ def api_login(email, password):
                 
                 if not isinstance(data, dict):
                     print(f"{T.error}❌ Login yanıtı beklenen JSON biçiminde değil.{C.RESET}")
-                    time.sleep(2)
+                    time.sleep(1)
                     continue
                 
                 token = data.get("token")
@@ -698,7 +698,7 @@ def api_login(email, password):
                 
                 if not token:
                     print(f"{T.error}❌ Login yanıtında token yok.{C.RESET}")
-                    time.sleep(2)
+                    time.sleep(1)
                     continue
                 
                 return {
@@ -710,14 +710,14 @@ def api_login(email, password):
                 }
                 
             except requests.exceptions.RequestException as e:
-                print(f"{T.error}❌ Login Error: {e} - 3 saniye sonra tekrar denenecek...{C.RESET}")
-                time.sleep(3)
+                print(f"{T.error}❌ Login Error: {e} - 1 saniye sonra tekrar denenecek...{C.RESET}")
+                time.sleep(1)
             except (ValueError, TypeError) as e:
-                print(f"{T.error}❌ Login yanıtı okunamadı: {e} - 2 saniye sonra tekrar denenecek...{C.RESET}")
-                time.sleep(2)
+                print(f"{T.error}❌ Login yanıtı okunamadı: {e} - 1 saniye sonra tekrar denenecek...{C.RESET}")
+                time.sleep(1)
             except Exception as e:
-                print(f"{T.error}❌ Login Error: {e} - 3 saniye sonra tekrar denenecek...{C.RESET}")
-                time.sleep(3)
+                print(f"{T.error}❌ Login Error: {e} - 1 saniye sonra tekrar denenecek...{C.RESET}")
+                time.sleep(1)
                 
     except KeyboardInterrupt:
         return None
@@ -752,8 +752,8 @@ def api_spin_fast(info):
                 response = session.get(API_SPIN, headers=headers, timeout=10)
                 
                 if response.status_code == 429:
-                    print(f"\r{T.warning}⚠️ 429 Rate Limit - 2 saniye beklenip devam edilecek...{C.RESET}")
-                    time.sleep(2)
+                    print(f"\r{T.warning}⚠️ 429 Rate Limit - 1 saniye beklenip devam edilecek...{C.RESET}")
+                    time.sleep(1)
                     continue
                 
                 response.raise_for_status()
@@ -764,7 +764,7 @@ def api_spin_fast(info):
                 
                 if data.get("error") or data.get("message") == "error":
                     print(f"{T.error}⚠️  API hatası: {data.get('message', 'Bilinmeyen hata')} - Devam ediliyor...{C.RESET}")
-                    time.sleep(2)
+                    time.sleep(1)
                     continue
                 
                 user = data.get("user") or {}
@@ -814,11 +814,11 @@ def api_spin_fast(info):
                     time.sleep(0.1)
                     
             except requests.exceptions.RequestException as e:
-                print(f"{T.error}⚠️  Ağ isteği başarısız: {e} - 3 saniye sonra tekrar denenecek...{C.RESET}")
-                time.sleep(3)
+                print(f"{T.error}⚠️  Ağ isteği başarısız: {e} - 1 saniye sonra tekrar denenecek...{C.RESET}")
+                time.sleep(1)
             except (ValueError, TypeError, OverflowError) as e:
-                print(f"{T.error}⚠️  Spin yanıtı geçersiz: {e} - 2 saniye sonra tekrar denenecek...{C.RESET}")
-                time.sleep(2)
+                print(f"{T.error}⚠️  Spin yanıtı geçersiz: {e} - 1 saniye sonra tekrar denenecek...{C.RESET}")
+                time.sleep(1)
             except KeyboardInterrupt:
                 break
                 
@@ -852,8 +852,8 @@ def process_account_247(email, password):
         info = api_login(email, password)
         
         if not info:
-            print(f"{T.error}❌ Giriş başarısız - 5 saniye sonra tekrar denenecek...{C.RESET}")
-            time.sleep(5)
+            print(f"{T.error}❌ Giriş başarısız - 1 saniye sonra tekrar denenecek...{C.RESET}")
+            time.sleep(1)
             continue
         
         print(f"{T.success}✅ Giriş başarılı | Bakiye: {info['balance']} | Kredi: {info['credits']}{C.RESET}")
@@ -861,8 +861,8 @@ def process_account_247(email, password):
         credits = max(0, int(StatsManager._finite_number(info.get("credits", 0))))
         
         if credits <= 0:
-            print(f"{T.warning}⏹️ Kredi 0 - 30 saniye beklenip tekrar denenecek...{C.RESET}")
-            time.sleep(30)
+            print(f"{T.warning}⏹️ Kredi 0 - 1 saniye beklenip tekrar denenecek...{C.RESET}")
+            time.sleep(1)
             continue
         
         spins = 0
@@ -874,8 +874,8 @@ def process_account_247(email, password):
             total_reward_all += reward
             print(f"\n{T.success}✅ Spin: {spins} | Ödül: {reward}{C.RESET}")
         except Exception as spin_err:
-            print(f"{T.error}❌ Spin döngüsü hatası: {spin_err} - 5 saniye sonra tekrar denenecek...{C.RESET}")
-            time.sleep(5)
+            print(f"{T.error}❌ Spin döngüsü hatası: {spin_err} - 1 saniye sonra tekrar denenecek...{C.RESET}")
+            time.sleep(1)
             continue
         
         ads = 0
@@ -887,12 +887,11 @@ def process_account_247(email, password):
             print(f"{T.error}❌ İstatistik kaydetme hatası: {stats_err}{C.RESET}")
         
         if remaining_credits <= 0:
-            print(f"{T.warning}⏹️ Kullanılabilir kredi kalmadı - 30 saniye beklenip yeni çevrim başlatılacak...{C.RESET}")
-            time.sleep(30)
+            print(f"{T.warning}⏹️ Kullanılabilir kredi kalmadı - 1 saniye beklenip yeni çevrim başlatılacak...{C.RESET}")
+            time.sleep(1)
             continue
         
-        print(f"\n{T.warning}⏳ Yeni çevrimden önce 5 saniye bekleniyor...{C.RESET}")
-        time.sleep(5)
+        time.sleep(0.5)
 
 # ═══════════════════════════════════════════════════════════════════
 # BÖLÜM 14: MENÜ SİSTEMİ
