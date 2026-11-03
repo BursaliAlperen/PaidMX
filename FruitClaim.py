@@ -1,13 +1,13 @@
 """
 ╔══════════════════════════════════════════════════════════════════╗
-║     🎰 FRUITCLAIM PRO v4.0 - AAA EDITION 🎰                     ║
-║     Ultra Premium UI | Multi-Account | Live Stats                ║
+║     🎰 FRUITCLAIM PRO v7.0 - ULTRA FAST 7/24 EDITION 🎰         ║
+║     Unlimited Loop | Multi-Account | AAA UI | Zero Bugs          ║
 ║     Creator: AlperenThe | 2026                                   ║
 ╚══════════════════════════════════════════════════════════════════╝
 """
 
 # ═══════════════════════════════════════════════════════════════════
-# 🎨 BÖLÜM 1: RENK KODLARI VE TEMA SİSTEMİ
+# BÖLÜM 1: IMPORTS VE TEMEL AYARLAR
 # ═══════════════════════════════════════════════════════════════════
 
 import json
@@ -16,16 +16,17 @@ import shutil
 import time
 import sys
 import random
-import threading
 from datetime import datetime
 from urllib.parse import parse_qs, urlencode, urlparse, urlunparse
 import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
-# --- ANSI Renk Kodları ---
+# ═══════════════════════════════════════════════════════════════════
+# BÖLÜM 2: RENK KODLARI
+# ═══════════════════════════════════════════════════════════════════
+
 class Colors:
-    """Tüm ANSI renk kodları ve stilleri"""
     RESET       = "\033[0m"
     BOLD        = "\033[1m"
     DIM         = "\033[2m"
@@ -36,7 +37,6 @@ class Colors:
     HIDDEN      = "\033[8m"
     STRIKE      = "\033[9m"
 
-    # Standart Renkler
     BLACK       = "\033[30m"
     RED         = "\033[31m"
     GREEN       = "\033[32m"
@@ -46,7 +46,6 @@ class Colors:
     CYAN        = "\033[36m"
     WHITE       = "\033[37m"
 
-    # Parlak Renkler
     BRIGHT_BLACK    = "\033[90m"
     BRIGHT_RED      = "\033[91m"
     BRIGHT_GREEN    = "\033[92m"
@@ -56,7 +55,6 @@ class Colors:
     BRIGHT_CYAN     = "\033[96m"
     BRIGHT_WHITE    = "\033[97m"
 
-    # Arka Plan Renkleri
     BG_BLACK    = "\033[40m"
     BG_RED      = "\033[41m"
     BG_GREEN    = "\033[42m"
@@ -66,19 +64,13 @@ class Colors:
     BG_CYAN     = "\033[46m"
     BG_WHITE    = "\033[47m"
 
-    # Parlak Arka Plan
-    BG_BRIGHT_RED     = "\033[101m"
-    BG_BRIGHT_GREEN   = "\033[102m"
-    BG_BRIGHT_YELLOW  = "\033[103m"
-    BG_BRIGHT_BLUE    = "\033[104m"
-    BG_BRIGHT_MAGENTA = "\033[105m"
-    BG_BRIGHT_CYAN    = "\033[106m"
-
 C = Colors()
 
-# --- Tema Sistemi ---
+# ═══════════════════════════════════════════════════════════════════
+# BÖLÜM 3: TEMA SİSTEMİ
+# ═══════════════════════════════════════════════════════════════════
+
 class Theme:
-    """Farklı tema seçenekleri"""
     THEMES = {
         "neon": {
             "primary": C.CYAN,
@@ -149,22 +141,21 @@ class Theme:
     def __getattr__(self, name):
         if name in self.colors:
             return self.colors[name]
-        raise AttributeError(f"Theme has no '{name}'")
+        upper = name.upper()
+        if hasattr(Colors, upper):
+            return getattr(Colors, upper)
+        return C.YELLOW
 
-# Aktif tema
 current_theme = Theme("neon")
 T = current_theme
 
 # ═══════════════════════════════════════════════════════════════════
-# 📐 BÖLÜM 2: TERMİNAL VE EKRAN YÖNETİMİ
+# BÖLÜM 4: TERMİNAL YÖNETİMİ
 # ═══════════════════════════════════════════════════════════════════
 
 class TerminalManager:
-    """Terminal boyutu ve ekran yönetimi"""
-
     @staticmethod
     def width():
-        """Terminal genişliğini al"""
         try:
             return shutil.get_terminal_size().columns
         except:
@@ -172,7 +163,6 @@ class TerminalManager:
 
     @staticmethod
     def height():
-        """Terminal yüksekliğini al"""
         try:
             return shutil.get_terminal_size().lines
         except:
@@ -180,7 +170,6 @@ class TerminalManager:
 
     @staticmethod
     def clear():
-        """Ekranı temizle"""
         os.system("cls" if os.name == "nt" else "clear")
 
     @staticmethod
@@ -194,36 +183,17 @@ class TerminalManager:
         sys.stdout.flush()
 
     @staticmethod
-    def move_cursor(x, y):
-        sys.stdout.write(f"\033[{y};{x}H")
-        sys.stdout.flush()
-
-    @staticmethod
-    def save_cursor():
-        sys.stdout.write("\033[s")
-        sys.stdout.flush()
-
-    @staticmethod
-    def restore_cursor():
-        sys.stdout.write("\033[u")
-        sys.stdout.flush()
-
-    @staticmethod
     def set_title(title):
-        """Terminal başlığını ayarla"""
         sys.stdout.write(f"\033]0;{title}\007")
         sys.stdout.flush()
 
 # ═══════════════════════════════════════════════════════════════════
-# 🎨 BÖLÜM 3: ÇİZİM VE ŞEKİL FONKSİYONLARI
+# BÖLÜM 5: ÇİZİM FONKSİYONLARI
 # ═══════════════════════════════════════════════════════════════════
 
 class Drawer:
-    """Çizim fonksiyonları"""
-
     @staticmethod
     def line(char="═", length=None, color=None):
-        """Yatay çizgi"""
         w = length or TerminalManager.width()
         c = color or T.border
         return f"{c}{char * w}{C.RESET}"
@@ -253,30 +223,11 @@ class Drawer:
 
     @staticmethod
     def center(text, width=None):
-        """Metni ortala"""
         w = width or TerminalManager.width()
         return text.center(w)
 
     @staticmethod
-    def box(title, content, width=None, padding=1):
-        """Kutu çiz"""
-        w = width or TerminalManager.width()
-        inner_w = w - 4
-        lines = []
-        lines.append(f"{T.border}╔{'═' * (inner_w)}╗{C.RESET}")
-        if title:
-            title_padded = f" {title} ".center(inner_w)
-            lines.append(f"{T.border}║{C.RESET}{title_padded}{T.border}║{C.RESET}")
-            lines.append(f"{T.border}╠{'═' * (inner_w)}╣{C.RESET}")
-        for line in content.split('\n'):
-            padded = line.ljust(inner_w)[:inner_w]
-            lines.append(f"{T.border}║{C.RESET} {padded} {T.border}║{C.RESET}")
-        lines.append(f"{T.border}╚{'═' * (inner_w)}╝{C.RESET}")
-        return '\n'.join(lines)
-
-    @staticmethod
     def fancy_box(title, content_lines, width=None):
-        """Süslü kutu"""
         w = width or TerminalManager.width()
         inner = w - 6
         out = []
@@ -293,7 +244,6 @@ class Drawer:
 
     @staticmethod
     def divider(text="", style="double"):
-        """Ayırıcı"""
         w = TerminalManager.width()
         if style == "double":
             left = "═" * ((w - len(text) - 4) // 2)
@@ -308,40 +258,18 @@ class Drawer:
             right = "─" * (w - len(text) - 4 - len(left))
             return f"{T.border}{left} {T.accent}• {text} •{T.border} {right}{C.RESET}"
 
-    @staticmethod
-    def corner_box(title, body_lines):
-        """Köşeli kutu"""
-        w = TerminalManager.width()
-        inner = w - 4
-        out = [f"{T.border}╔{'═' * inner}╗{C.RESET}"]
-        if title:
-            t = f" {title} ".center(inner)
-            out.append(f"{T.border}║{C.RESET}{T.accent}{t}{C.RESET}{T.border}║{C.RESET}")
-            out.append(f"{T.border}╠{'═' * inner}╣{C.RESET}")
-        for line in body_lines:
-            p = line.ljust(inner)[:inner]
-            out.append(f"{T.border}║{C.RESET} {p} {T.border}║{C.RESET}")
-        out.append(f"{T.border}╚{'═' * inner}╝{C.RESET}")
-        return '\n'.join(out)
-
 # ═══════════════════════════════════════════════════════════════════
-# ✨ BÖLÜM 4: ANİMASYON SİSTEMİ
+# BÖLÜM 6: ANİMASYON SİSTEMİ
 # ═══════════════════════════════════════════════════════════════════
 
 class Animator:
-    """Animasyon fonksiyonları"""
-
     SPINNERS = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"]
-    ARROWS = ["→", "↘", "↓", "↙", "←", "↖", "↑", "↗"]
-    DOTS = [".  ", ".. ", "...", " ..", "  ."]
     PULSE = ["○", "◐", "●", "◑"]
-    BOUNCERS = ["[    ]", "[=   ]", "[==  ]", "[===]", "[ == ]", "[  = ]", "[    ]"]
     LOADING_BARS = ["▰▱▱▱▱▱▱", "▰▰▱▱▱▱▱", "▰▰▰▱▱▱▱", "▰▰▰▰▱▱▱", "▰▰▰▰▰▱▱", "▰▰▰▰▰▰▱", "▰▰▰▰▰▰▰"]
 
     @staticmethod
-    def spinner(text, duration=1.5, color=None):
-        """Dönen spinner"""
-        c = color or T.yellow
+    def spinner(text, duration=1.0, color=None):
+        c = color or T.warning
         end = time.time() + duration
         i = 0
         try:
@@ -355,17 +283,7 @@ class Animator:
             pass
 
     @staticmethod
-    def typing(text, speed=0.03, color=None):
-        """Daktilo efekti"""
-        c = color or T.text
-        for char in text:
-            print(f"{c}{char}{C.RESET}", end="", flush=True)
-            time.sleep(speed)
-        print()
-
-    @staticmethod
     def progress_bar(percent, width=40, label=""):
-        """İlerleme çubuğu"""
         filled = int(width * percent / 100)
         empty = width - filled
         bar = "█" * filled + "░" * empty
@@ -378,312 +296,31 @@ class Animator:
         return f"{color}[{bar}]{C.RESET} {percent:3d}% {label}"
 
     @staticmethod
-    def animated_progress(task, total_steps, color=None):
-        """Animasyonlu ilerleme"""
-        c = color or T.primary
-        for i in range(total_steps + 1):
-            pct = int(i * 100 / total_steps)
-            bar = Animator.progress_bar(pct, 30)
-            print(f"\r{c}{task}: {bar}{C.RESET}", end="", flush=True)
-            time.sleep(0.1)
-        print()
-
-    @staticmethod
-    def pulse(text, duration=2.0):
-        """Nabız efekti"""
-        end = time.time() + duration
-        i = 0
-        try:
-            while time.time() < end:
-                frame = Animator.PULSE[i % len(Animator.PULSE)]
-                print(f"\r{T.accent}{frame} {text}{C.RESET}", end="", flush=True)
-                i += 1
-                time.sleep(0.2)
-        except:
-            pass
-
-    @staticmethod
-    def bounce(text, duration=1.5):
-        """Zıplayan animasyon"""
-        end = time.time() + duration
-        i = 0
-        try:
-            while time.time() < end:
-                frame = Animator.BOUNCERS[i % len(Animator.BOUNCERS)]
-                print(f"\r{T.primary}{frame} {text}{C.RESET}", end="", flush=True)
-                i += 1
-                time.sleep(0.15)
-        except:
-            pass
-
-    @staticmethod
     def loading_sequence(steps, delay=0.3):
-        """Yükleme sekansı"""
         for step in steps:
             Animator.spinner(step, duration=delay)
             time.sleep(0.1)
 
     @staticmethod
-    def matrix_rain(duration=2.0):
-        """Matrix yağmuru efekti"""
-        chars = "アイウエオカキクケコサシスセソ0123456789ABCDEF"
-        w = TerminalManager.width()
-        end = time.time() + duration
-        try:
-            while time.time() < end:
-                line = ''.join(random.choice(chars) for _ in range(w))
-                print(f"{T.success}{line}{C.RESET}")
-                time.sleep(0.05)
-        except:
-            pass
-
-    @staticmethod
     def rainbow_text(text):
-        """Gökkuşağı metin"""
         colors = [C.RED, C.YELLOW, C.GREEN, C.CYAN, C.BLUE, C.MAGENTA]
         result = ""
         for i, char in enumerate(text):
             result += f"{colors[i % len(colors)]}{char}{C.RESET}"
         return result
 
-    @staticmethod
-    def glitch_text(text, iterations=3):
-        """Glitch efekti"""
-        glitch_chars = "!@#$%^&*()_+-=[]{}|;:',.<>?"
-        for _ in range(iterations):
-            glitched = ''.join(
-                random.choice(glitch_chars) if random.random() < 0.3 else c
-                for c in text
-            )
-            print(f"\r{T.error}{glitched}{C.RESET}", end="", flush=True)
-            time.sleep(0.1)
-        print(f"\r{T.success}{text}{C.RESET}", end="", flush=True)
-        time.sleep(0.3)
-        print()
-
 # ═══════════════════════════════════════════════════════════════════
-# 🎨 BÖLÜM 5: GÖRSEL BİLEŞENLER
-# ═══════════════════════════════════════════════════════════════════
-
-class VisualComponents:
-    """Görsel UI bileşenleri"""
-
-    @staticmethod
-    def header(title, subtitle="", version=""):
-        """Başlık"""
-        w = TerminalManager.width()
-        out = []
-        out.append(Drawer.line("═", color=T.primary))
-        out.append(Drawer.center(f"{T.accent}{C.BOLD}★ {title} ★{C.RESET}", w))
-        if subtitle:
-            out.append(Drawer.center(f"{T.text}{subtitle}{C.RESET}", w))
-        if version:
-            out.append(Drawer.center(f"{T.dim}v{version}{C.RESET}", w))
-        out.append(Drawer.line("═", color=T.primary))
-        return '\n'.join(out)
-
-    @staticmethod
-    def status_bar():
-        """Durum çubuğu"""
-        w = TerminalManager.width()
-        now = datetime.now().strftime("%H:%M:%S")
-        date = datetime.now().strftime("%d/%m/%Y")
-        bar = f"{T.primary}┌{C.RESET}" + f"{T.primary}─{C.RESET}" * (w - 2) + f"{T.primary}┐{C.RESET}"
-        content = f"{T.primary}│{C.RESET} {T.accent}🕐 {now}{C.RESET} | {T.accent}📅 {date}{C.RESET} | {T.accent}🎰 FruitClaim Pro v4.0{C.RESET} | {T.accent}👤 AlperenThe{C.RESET} "
-        content = content.ljust(w - 2)[:w - 2]
-        bottom = f"{T.primary}└{C.RESET}" + f"{T.primary}─{C.RESET}" * (w - 2) + f"{T.primary}┘{C.RESET}"
-        return f"{bar}\n{T.primary}│{C.RESET}{content}{T.primary}│{C.RESET}\n{bottom}"
-
-    @staticmethod
-    def menu_item(number, text, icon="", selected=False):
-        """Menü öğesi"""
-        if selected:
-            return f"{T.accent}{C.BOLD}  [{number}] {icon} {text}{C.RESET}"
-        else:
-            return f"{T.text}  [{number}] {icon} {text}{C.RESET}"
-
-    @staticmethod
-    def menu(title, items, footer=""):
-        """Menü"""
-        w = TerminalManager.width()
-        out = []
-        out.append(Drawer.line("═", color=T.primary))
-        out.append(Drawer.center(f"{T.accent}{C.BOLD}« {title} »{C.RESET}", w))
-        out.append(Drawer.line("─", color=T.border))
-        for i, (num, text, icon) in enumerate(items):
-            out.append(VisualComponents.menu_item(num, text, icon))
-        if footer:
-            out.append(Drawer.line("─", color=T.border))
-            out.append(f"{T.dim}  {footer}{C.RESET}")
-        out.append(Drawer.line("═", color=T.primary))
-        return '\n'.join(out)
-
-    @staticmethod
-    def info_card(title, items, icon="ℹ️"):
-        """Bilgi kartı"""
-        lines = []
-        lines.append(f"{T.accent}{icon} {title}{C.RESET}")
-        lines.append(Drawer.dashed_line(color=T.border))
-        for label, value in items:
-            lines.append(f"{T.text}  {label:<20} : {T.accent}{value}{C.RESET}")
-        return Drawer.fancy_box("", lines)
-
-    @staticmethod
-    def stat_card(label, value, icon="📊", color=None):
-        """İstatistik kartı"""
-        c = color or T.primary
-        w = 25
-        top = f"{c}┌{'─' * (w - 2)}┐{C.RESET}"
-        mid = f"{c}│{C.RESET} {icon} {label:<15} {c}│{C.RESET}"
-        val = f"{c}│{C.RESET} {T.accent}{C.BOLD}{str(value):<{w - 3}}{C.RESET}{c}│{C.RESET}"
-        bot = f"{c}└{'─' * (w - 2)}┘{C.RESET}"
-        return f"{top}\n{mid}\n{val}\n{bot}"
-
-    @staticmethod
-    def stats_grid(stats_dict):
-        """İstatistik ızgarası"""
-        cards = []
-        for label, (value, icon, color) in stats_dict.items():
-            cards.append(VisualComponents.stat_card(label, value, icon, color))
-        # Yan yana diz
-        card_lines = [c.split('\n') for c in cards]
-        max_lines = max(len(cl) for cl in card_lines)
-        out = []
-        for i in range(max_lines):
-            row = []
-            for cl in card_lines:
-                row.append(cl[i] if i < len(cl) else " " * 25)
-            out.append("  ".join(row))
-        return '\n'.join(out)
-
-    @staticmethod
-    def account_card(index, email, balance, credits, status="active"):
-        """Hesap kartı"""
-        w = 50
-        if status == "active":
-            border = T.success
-            status_icon = "✅"
-        elif status == "error":
-            border = T.error
-            status_icon = "❌"
-        else:
-            border = T.warning
-            status_icon = "⏸️"
-
-        out = []
-        out.append(f"{border}╔{'═' * (w - 2)}╗{C.RESET}")
-        out.append(f"{border}║{C.RESET} {T.accent}#{index}{C.RESET} {status_icon} {email:<40} {border}║{C.RESET}")
-        out.append(f"{border}╠{'═' * (w - 2)}╣{C.RESET}")
-        out.append(f"{border}║{C.RESET} 💰 Balance: {T.success}{balance:<10}{C.RESET} 🎰 Credits: {T.accent}{credits:<10} {border}║{C.RESET}")
-        out.append(f"{border}╚{'═' * (w - 2)}╝{C.RESET}")
-        return '\n'.join(out)
-
-    @staticmethod
-    def log_entry(level, message, timestamp=None):
-        """Log girişi"""
-        ts = timestamp or datetime.now().strftime("%H:%M:%S")
-        if level == "INFO":
-            color, icon = T.info, "ℹ️"
-        elif level == "SUCCESS":
-            color, icon = T.success, "✅"
-        elif level == "WARNING":
-            color, icon = T.warning, "⚠️"
-        elif level == "ERROR":
-            color, icon = T.error, "❌"
-        elif level == "DEBUG":
-            color, icon = T.dim, "🔍"
-        else:
-            color, icon = T.text, "•"
-        return f"{T.dim}[{ts}]{C.RESET} {color}{icon} {message}{C.RESET}"
-
-    @staticmethod
-    def notification(title, message, level="info"):
-        """Bildirim"""
-        if level == "success":
-            border, icon = T.success, "✅"
-        elif level == "error":
-            border, icon = T.error, "❌"
-        elif level == "warning":
-            border, icon = T.warning, "⚠️"
-        else:
-            border, icon = T.info, "ℹ️"
-        w = 60
-        out = []
-        out.append(f"{border}╔{'═' * (w - 2)}╗{C.RESET}")
-        out.append(f"{border}║{C.RESET} {T.accent}{C.BOLD}{title.center(w - 4)}{C.RESET} {border}║{C.RESET}")
-        out.append(f"{border}╠{'═' * (w - 2)}╣{C.RESET}")
-        msg_padded = message.center(w - 4)[:w - 4]
-        out.append(f"{border}║{C.RESET} {msg_padded} {border}║{C.RESET}")
-        out.append(f"{border}╚{'═' * (w - 2)}╝{C.RESET}")
-        return '\n'.join(out)
-
-    @staticmethod
-    def input_prompt(label, icon="▶"):
-        """Giriş promptu"""
-        return f"{T.accent}{icon} {label}: {C.RESET}"
-
-    @staticmethod
-    def splash_screen():
-        """Açılış ekranı"""
-        w = TerminalManager.width()
-        out = []
-        out.append("")
-        out.append(Drawer.center(f"{T.primary}{C.BOLD}╔══════════════════════════════════════════════════════╗{C.RESET}", w))
-        out.append(Drawer.center(f"{T.primary}{C.BOLD}║{C.RESET}{T.accent}  🎰 FRUITCLAIM PRO v4.0 - AAA EDITION 🎰  {C.RESET}{T.primary}{C.BOLD}║{C.RESET}", w))
-        out.append(Drawer.center(f"{T.primary}{C.BOLD}╚══════════════════════════════════════════════════════╝{C.RESET}", w))
-        out.append("")
-        out.append(Drawer.center(f"{T.text}Ultra Premium Multi-Account Bot{C.RESET}", w))
-        out.append(Drawer.center(f"{T.dim}Creator: AlperenThe | 2026{C.RESET}", w))
-        out.append("")
-        out.append(Drawer.center(f"{T.accent}Initializing system...{C.RESET}", w))
-        return '\n'.join(out)
-
-    @staticmethod
-    def achievement_badge(title, description, icon="🏆"):
-        """Başarı rozeti"""
-        w = 50
-        out = []
-        out.append(f"{T.accent}╔{'═' * (w - 2)}╗{C.RESET}")
-        out.append(f"{T.accent}║{C.RESET} {icon} {title.center(w - 6)} {T.accent}║{C.RESET}")
-        out.append(f"{T.accent}╠{'═' * (w - 2)}╣{C.RESET}")
-        desc_padded = description.center(w - 4)[:w - 4]
-        out.append(f"{T.accent}║{C.RESET} {desc_padded} {T.accent}║{C.RESET}")
-        out.append(f"{T.accent}╚{'═' * (w - 2)}╝{C.RESET}")
-        return '\n'.join(out)
-
-    @staticmethod
-    def mini_bar_chart(values, labels, max_height=5):
-        """Mini çubuk grafik"""
-        max_val = max(values) if values else 1
-        out = []
-        for i, (val, label) in enumerate(zip(values, labels)):
-            height = int(val / max_val * max_height) if max_val > 0 else 0
-            bar = "█" * height
-            color = [T.success, T.accent, T.warning, T.error][i % 4]
-            out.append(f"{color}{bar:<{max_height}}{C.RESET} {label}: {val}")
-        return '\n'.join(out)
-
-    @staticmethod
-    def loading_screen():
-        """Yükleme ekranı"""
-        w = TerminalManager.width()
-        out = []
-        out.append("")
-        out.append(Drawer.center(f"{T.primary}╔══════════════════════════════════════╗{C.RESET}", w))
-        out.append(Drawer.center(f"{T.primary}║{C.RESET}{T.accent}  SYSTEM LOADING...  {C.RESET}{T.primary}║{C.RESET}", w))
-        out.append(Drawer.center(f"{T.primary}╚══════════════════════════════════════╝{C.RESET}", w))
-        out.append("")
-        return '\n'.join(out)
-
-# ═══════════════════════════════════════════════════════════════════
-# 🎭 BÖLÜM 6: ASCII SANAT KÜTÜPHANESİ
+# BÖLÜM 7: ASCII SANAT
 # ═══════════════════════════════════════════════════════════════════
 
 class ASCIIArt:
-    """ASCII sanat koleksiyonu"""
-
-    FRUIT = r"""
-    🍎🍊🍋🍇🍓🍒🍑🍍🥝🍌
+    LOGO_BIG = r"""
+ ███████╗██╗  ██╗ ██████╗ ███╗   ██╗███████╗██████╗ 
+ ██╔════╝██║  ██║██╔═══██╗████╗  ██║██╔════╝██╔══██╗
+ ███████╗███████║██║   ██║██╔██╗ ██║█████╗  ██████╔╝
+ ╚════██║██╔══██║██║   ██║██║╚██╗██║██╔══╝  ██╔══██╗
+ ███████║██║  ██║╚██████╔╝██║ ╚████║███████╗██║  ██║
+ ╚══════╝╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═══╝╚══════╝╚═╝  ╚═╝
     """
 
     SLOT_MACHINE = r"""
@@ -694,21 +331,6 @@ class ASCIIArt:
    ║  └─────┴─────┴─────┘         ║
    ║         [ SPIN ]              ║
    ╚═══════════════════════════════╝
-    """
-
-    LOGO_BIG = r"""
- ███████╗██╗  ██╗ ██████╗ ███╗   ██╗███████╗██████╗ 
- ██╔════╝██║  ██║██╔═══██╗████╗  ██║██╔════╝██╔══██╗
- ███████╗███████║██║   ██║██╔██╗ ██║█████╗  ██████╔╝
- ╚════██║██╔══██║██║   ██║██║╚██╗██║██╔══╝  ██╔══██╗
- ███████║██║  ██║╚██████╔╝██║ ╚████║███████╗██║  ██║
- ╚══════╝╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═══╝╚══════╝╚═╝  ╚═╝
-    """
-
-    LOGO_SMALL = r"""
-  ┌─────────────────────────┐
-  │  🎰 FRUITCLAIM PRO 🎰   │
-  └─────────────────────────┘
     """
 
     TROPHY = r"""
@@ -740,159 +362,169 @@ class ASCIIArt:
        /________\\
     """
 
-    COIN = r"""
-      .-""""""-.
-    .'          '.
-   /   O      O   \\
-  :           `    :
-  |                |
-  :    .------.    :
-   \\  '        '  /
-    '.          .'
-      '-......-'
-    """
+# ═══════════════════════════════════════════════════════════════════
+# BÖLÜM 8: GÖRSEL BİLEŞENLER
+# ═══════════════════════════════════════════════════════════════════
 
-    CROWN = r"""
-         .-~-.
-        / _ _ \\
-       | (_|_) |
-       |  _ _  |
-        \\_ _ /
-         '---'
-    """
-
-    STAR = r"""
-          *
-         ***
-        *****
-       *******
-      *********
-       *******
-        *****
-         ***
-          *
-    """
-
-    HEART = r"""
-     **   **
-    **** ****
-   ***********
-    *********
-     *******
-      *****
-       ***
-        *
-    """
-
-    DIAMOND = r"""
-          *
-         ***
-        *****
-       *******
-      *********
-       *******
-        *****
-         ***
-          *
-    """
-
-    GEAR = r"""
-       .-~~~-.
-     .'       '.
-    /    O   O   \\
-   |      _      |
-    \\    (_)    /
-     '.       .'
-       '-...-'
-    """
+class VisualComponents:
+    @staticmethod
+    def header(title, subtitle="", version=""):
+        w = TerminalManager.width()
+        out = []
+        out.append(Drawer.line("═", color=T.primary))
+        out.append(Drawer.center(f"{T.accent}{C.BOLD}★ {title} ★{C.RESET}", w))
+        if subtitle:
+            out.append(Drawer.center(f"{T.text}{subtitle}{C.RESET}", w))
+        if version:
+            out.append(Drawer.center(f"{T.dim}v{version}{C.RESET}", w))
+        out.append(Drawer.line("═", color=T.primary))
+        return '\n'.join(out)
 
     @staticmethod
-    def get(name):
-        """ASCII sanatı al"""
-        return getattr(ASCIIArt, name.upper(), "")
+    def status_bar():
+        w = TerminalManager.width()
+        now = datetime.now().strftime("%H:%M:%S")
+        date = datetime.now().strftime("%d/%m/%Y")
+        bar = f"{T.primary}┌{C.RESET}" + f"{T.primary}─{C.RESET}" * (w - 2) + f"{T.primary}┐{C.RESET}"
+        content = f"{T.primary}│{C.RESET} {T.accent}🕐 {now}{C.RESET} | {T.accent}📅 {date}{C.RESET} | {T.accent}🎰 FruitClaim Pro v7.0{C.RESET} | {T.accent}👤 AlperenThe{C.RESET} "
+        content = content.ljust(w - 2)[:w - 2]
+        bottom = f"{T.primary}└{C.RESET}" + f"{T.primary}─{C.RESET}" * (w - 2) + f"{T.primary}┘{C.RESET}"
+        return f"{bar}\n{T.primary}│{C.RESET}{content}{T.primary}│{C.RESET}\n{bottom}"
+
+    @staticmethod
+    def menu_item(number, text, icon="", selected=False):
+        if selected:
+            return f"{T.accent}{C.BOLD}  [{number}] {icon} {text}{C.RESET}"
+        else:
+            return f"{T.text}  [{number}] {icon} {text}{C.RESET}"
+
+    @staticmethod
+    def menu(title, items, footer=""):
+        w = TerminalManager.width()
+        out = []
+        out.append(Drawer.line("═", color=T.primary))
+        out.append(Drawer.center(f"{T.accent}{C.BOLD}« {title} »{C.RESET}", w))
+        out.append(Drawer.line("─", color=T.border))
+        for num, text, icon in items:
+            out.append(VisualComponents.menu_item(num, text, icon))
+        if footer:
+            out.append(Drawer.line("─", color=T.border))
+            out.append(f"{T.dim}  {footer}{C.RESET}")
+        out.append(Drawer.line("═", color=T.primary))
+        return '\n'.join(out)
+
+    @staticmethod
+    def info_card(title, items, icon="ℹ️"):
+        lines = []
+        lines.append(f"{T.accent}{icon} {title}{C.RESET}")
+        lines.append(Drawer.dashed_line(color=T.border))
+        for label, value in items:
+            lines.append(f"{T.text}  {label:<20} : {T.accent}{value}{C.RESET}")
+        return Drawer.fancy_box("", lines)
+
+    @staticmethod
+    def stat_card(label, value, icon="📊", color=None):
+        c = color or T.primary
+        w = 25
+        top = f"{c}┌{'─' * (w - 2)}┐{C.RESET}"
+        mid = f"{c}│{C.RESET} {icon} {label:<15} {c}│{C.RESET}"
+        val = f"{c}│{C.RESET} {T.accent}{C.BOLD}{str(value):<{w - 3}}{C.RESET}{c}│{C.RESET}"
+        bot = f"{c}└{'─' * (w - 2)}┘{C.RESET}"
+        return f"{top}\n{mid}\n{val}\n{bot}"
+
+    @staticmethod
+    def stats_grid(stats_dict):
+        cards = []
+        for label, (value, icon, color) in stats_dict.items():
+            cards.append(VisualComponents.stat_card(label, value, icon, color))
+        card_lines = [c.split('\n') for c in cards]
+        max_lines = max(len(cl) for cl in card_lines)
+        out = []
+        for i in range(max_lines):
+            row = []
+            for cl in card_lines:
+                row.append(cl[i] if i < len(cl) else " " * 25)
+            out.append("  ".join(row))
+        return '\n'.join(out)
+
+    @staticmethod
+    def account_card(index, email, balance, credits, status="active"):
+        w = 50
+        if status == "active":
+            border = T.success
+            status_icon = "✅"
+        elif status == "error":
+            border = T.error
+            status_icon = "❌"
+        else:
+            border = T.warning
+            status_icon = "⏸️"
+
+        out = []
+        out.append(f"{border}╔{'═' * (w - 2)}╗{C.RESET}")
+        out.append(f"{border}║{C.RESET} {T.accent}#{index}{C.RESET} {status_icon} {email:<40} {border}║{C.RESET}")
+        out.append(f"{border}╠{'═' * (w - 2)}╣{C.RESET}")
+        out.append(f"{border}║{C.RESET} 💰 Balance: {T.success}{balance:<10}{C.RESET} 🎰 Credits: {T.accent}{credits:<10} {border}║{C.RESET}")
+        out.append(f"{border}╚{'═' * (w - 2)}╝{C.RESET}")
+        return '\n'.join(out)
+
+    @staticmethod
+    def notification(title, message, level="info"):
+        if level == "success":
+            border, icon = T.success, "✅"
+        elif level == "error":
+            border, icon = T.error, "❌"
+        elif level == "warning":
+            border, icon = T.warning, "⚠️"
+        else:
+            border, icon = T.info, "ℹ️"
+        w = 60
+        out = []
+        out.append(f"{border}╔{'═' * (w - 2)}╗{C.RESET}")
+        out.append(f"{border}║{C.RESET} {T.accent}{C.BOLD}{title.center(w - 4)}{C.RESET} {border}║{C.RESET}")
+        out.append(f"{border}╠{'═' * (w - 2)}╣{C.RESET}")
+        msg_padded = message.center(w - 4)[:w - 4]
+        out.append(f"{border}║{C.RESET} {msg_padded} {border}║{C.RESET}")
+        out.append(f"{border}╚{'═' * (w - 2)}╝{C.RESET}")
+        return '\n'.join(out)
+
+    @staticmethod
+    def input_prompt(label, icon="▶"):
+        return f"{T.accent}{icon} {label}: {C.RESET}"
+
+    @staticmethod
+    def splash_screen():
+        w = TerminalManager.width()
+        out = []
+        out.append("")
+        out.append(Drawer.center(f"{T.primary}{C.BOLD}╔══════════════════════════════════════════════════════╗{C.RESET}", w))
+        out.append(Drawer.center(f"{T.primary}{C.BOLD}║{C.RESET}{T.accent}  🎰 FRUITCLAIM PRO v7.0 - ULTRA FAST 🎰  {C.RESET}{T.primary}{C.BOLD}║{C.RESET}", w))
+        out.append(Drawer.center(f"{T.primary}{C.BOLD}╚══════════════════════════════════════════════════════╝{C.RESET}", w))
+        out.append("")
+        out.append(Drawer.center(f"{T.text}7/24 Unlimited | Multi-Account | Zero Bugs{C.RESET}", w))
+        out.append(Drawer.center(f"{T.dim}Creator: AlperenThe | 2026{C.RESET}", w))
+        out.append("")
+        out.append(Drawer.center(f"{T.accent}Initializing system...{C.RESET}", w))
+        return '\n'.join(out)
+
+    @staticmethod
+    def mini_bar_chart(values, labels, max_height=5):
+        max_val = max(values) if values else 1
+        out = []
+        for i, (val, label) in enumerate(zip(values, labels)):
+            height = int(val / max_val * max_height) if max_val > 0 else 0
+            bar = "█" * height
+            color = [T.success, T.accent, T.warning, T.error][i % 4]
+            out.append(f"{color}{bar:<{max_height}}{C.RESET} {label}: {val}")
+        return '\n'.join(out)
 
 # ═══════════════════════════════════════════════════════════════════
-# 🎨 BÖLÜM 7: EFEKT VE TRANSİSYON SİSTEMİ
+# BÖLÜM 9: EFEKTLER
 # ═══════════════════════════════════════════════════════════════════
 
 class Effects:
-    """Görsel efektler"""
-
-    @staticmethod
-    def fade_in(text, duration=0.5):
-        """Solma efekti"""
-        steps = 10
-        for i in range(steps):
-            alpha = i / steps
-            # Basit simülasyon
-            print(f"\r{text}", end="", flush=True)
-            time.sleep(duration / steps)
-        print()
-
-    @staticmethod
-    def slide_in(text, direction="left", width=None):
-        """Kayma efekti"""
-        w = width or TerminalManager.width()
-        for i in range(w):
-            if direction == "left":
-                padded = text.rjust(w - i)
-            else:
-                padded = text.ljust(w - i)
-            print(f"\r{padded}", end="", flush=True)
-            time.sleep(0.02)
-        print()
-
-    @staticmethod
-    def typewriter(text, speed=0.05, color=None):
-        """Daktilo efekti"""
-        c = color or T.text
-        for char in text:
-            print(f"{c}{char}{C.RESET}", end="", flush=True)
-            time.sleep(speed)
-        print()
-
-    @staticmethod
-    def scramble(text, iterations=5):
-        """Karıştırma efekti"""
-        chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%"
-        for _ in range(iterations):
-            scrambled = ''.join(random.choice(chars) for _ in text)
-            print(f"\r{T.error}{scrambled}{C.RESET}", end="", flush=True)
-            time.sleep(0.1)
-        print(f"\r{T.success}{text}{C.RESET}", end="", flush=True)
-        time.sleep(0.3)
-        print()
-
-    @staticmethod
-    def flash(text, color=None, count=3):
-        """Yanıp sönme"""
-        c = color or T.accent
-        for _ in range(count):
-            print(f"\r{T.bg_bright_red}{c}{text}{C.RESET}", end="", flush=True)
-            time.sleep(0.15)
-            print(f"\r{' ' * len(text)}", end="", flush=True)
-            time.sleep(0.15)
-        print(f"\r{text}", end="", flush=True)
-        time.sleep(0.3)
-        print()
-
-    @staticmethod
-    def wave(text):
-        """Dalga efekti"""
-        for offset in range(len(text)):
-            displayed = ""
-            for i, char in enumerate(text):
-                if (i + offset) % 3 == 0:
-                    displayed += f"{T.accent}{char}{C.RESET}"
-                else:
-                    displayed += char
-            print(f"\r{displayed}", end="", flush=True)
-            time.sleep(0.1)
-        print()
-
     @staticmethod
     def confetti(duration=1.0):
-        """Konfeti efekti"""
         emojis = ["🎉", "🎊", "✨", "⭐", "💫", "🌟"]
         w = TerminalManager.width()
         end = time.time() + duration
@@ -906,12 +538,10 @@ class Effects:
             pass
 
 # ═══════════════════════════════════════════════════════════════════
-# 📊 BÖLÜM 8: İSTATİSTİK VE RAPOR SİSTEMİ
+# BÖLÜM 10: İSTATİSTİK YÖNETİMİ
 # ═══════════════════════════════════════════════════════════════════
 
 class StatsManager:
-    """İstatistik yönetimi"""
-
     STATS_FILE = "bot_stats.json"
     ACCOUNTS_FILE = "accounts.json"
 
@@ -951,13 +581,7 @@ class StatsManager:
         return StatsManager.load_json(StatsManager.STATS_FILE)
 
     @staticmethod
-    def get_account(email):
-        stats = StatsManager.get_all()
-        return stats.get(email, {})
-
-    @staticmethod
     def display_dashboard():
-        """İstatistik panosu"""
         stats = StatsManager.get_all()
         w = TerminalManager.width()
 
@@ -970,7 +594,6 @@ class StatsManager:
             print(Drawer.center(f"{T.warning}⚠️  No data yet. Run the bot first!{C.RESET}", w))
             return
 
-        # Toplam istatistikler
         total_spins = sum(s.get("spins", 0) for s in stats.values())
         total_reward = sum(s.get("reward", 0) for s in stats.values())
         total_ads = sum(s.get("ads", 0) for s in stats.values())
@@ -984,7 +607,6 @@ class StatsManager:
         }))
         print()
 
-        # Her hesap için
         print(Drawer.divider("ACCOUNT DETAILS", "star"))
         print()
 
@@ -1002,7 +624,6 @@ class StatsManager:
             ))
             print()
 
-        # Mini grafik
         if len(stats) > 1:
             print(Drawer.divider("REWARD COMPARISON", "double"))
             print()
@@ -1016,12 +637,10 @@ class StatsManager:
         input(f"\n{T.accent}Press Enter to continue...{C.RESET}")
 
 # ═══════════════════════════════════════════════════════════════════
-# 👥 BÖLÜM 9: HESAP YÖNETİM SİSTEMİ
+# BÖLÜM 11: HESAP YÖNETİMİ
 # ═══════════════════════════════════════════════════════════════════
 
 class AccountManager:
-    """Hesap yönetimi"""
-
     @staticmethod
     def load():
         return StatsManager.load_json(StatsManager.ACCOUNTS_FILE)
@@ -1051,7 +670,6 @@ class AccountManager:
 
     @staticmethod
     def display():
-        """Hesapları görüntüle"""
         accs = AccountManager.list_all()
         w = TerminalManager.width()
 
@@ -1075,7 +693,6 @@ class AccountManager:
 
     @staticmethod
     def menu_loop():
-        """Hesap yönetimi menü döngüsü"""
         while True:
             AccountManager.display()
             print()
@@ -1123,10 +740,9 @@ class AccountManager:
                     time.sleep(1)
 
 # ═══════════════════════════════════════════════════════════════════
-# 🔐 BÖLÜM 10: API VE İŞ MANTIĞI
+# BÖLÜM 12: API URL'LERİ (DÜZELTİLMİŞ - BOŞLUKSUZ)
 # ═══════════════════════════════════════════════════════════════════
 
-# API URL'leri (boşluksuz)
 API_LOGIN = "https://slotfruits.com/api/v1/users/signupFaucetPayLogin"
 API_SPIN = "https://slotfruits.com/api/v1/users/earnRoll"
 ADS_URL = (
@@ -1160,18 +776,22 @@ ADS_URL = (
     "&jsv=sdk_20190107_RC02-production-sdk_20251202_RC00"
 )
 
+# ═══════════════════════════════════════════════════════════════════
+# BÖLÜM 13: API FONKSİYONLARI
+# ═══════════════════════════════════════════════════════════════════
+
 def get_session():
-    """Retry mekanizmalı session"""
+    """Hızlı ve güvenilir session"""
     s = requests.Session()
-    r = Retry(total=3, backoff_factor=1, status_forcelist=[429, 500, 502, 503, 504])
-    a = HTTPAdapter(max_retries=r)
-    s.mount("https://", a)
-    s.mount("http://", a)
+    retry = Retry(total=5, backoff_factor=0.1, status_forcelist=[429, 500, 502, 503, 504])
+    adapter = HTTPAdapter(max_retries=retry)
+    s.mount("https://", adapter)
+    s.mount("http://", adapter)
     return s
 
 def api_login(email, password):
-    """FaucetPay email + şifre girişi"""
-    Animator.spinner("Authenticating", duration=1.0, color=T.accent)
+    """FaucetPay email + şifre girişi - HATASIZ"""
+    Animator.spinner("Authenticating", duration=0.8, color=T.accent)
 
     payload = {"email": email.strip(), "password": password.strip()}
     headers = {
@@ -1181,7 +801,7 @@ def api_login(email, password):
     }
 
     try:
-        resp = get_session().post(API_LOGIN, json=payload, headers=headers, timeout=15)
+        resp = get_session().post(API_LOGIN, json=payload, headers=headers, timeout=10)
         resp.raise_for_status()
         data = resp.json()
         token = data.get("token")
@@ -1199,8 +819,8 @@ def api_login(email, password):
         print(f"{T.error}❌ Login Error: {str(e)}{C.RESET}")
         return None
 
-def api_spin(info):
-    """Spin döngüsü"""
+def api_spin_fast(info):
+    """ULTRA HIZLI spin döngüsü - 7/24 sınırsız"""
     token = info["token"]
     email = info["email"]
     credits = info["credits"]
@@ -1208,22 +828,23 @@ def api_spin(info):
     total_reward = 0
     spins = 0
     stuck = 0
+    max_stuck = 3
 
     if credits <= 0:
         print(f"{T.warning}⚠️  No credits. Watch ads first!{C.RESET}")
         return balance, credits, 0, 0
 
-    print(f"\n{T.accent}🎰 Starting Spin Loop ({credits} credits)...{C.RESET}\n")
+    print(f"\n{T.accent}🚀 ULTRA FAST MODE: {credits} credits{C.RESET}\n")
 
     while credits > 0:
         try:
-            hdrs = {
+            headers = {
                 "Authorization": f"Bearer {token}",
                 "User-Agent": "okhttp/4.12.0",
                 "Accept": "application/json, text/plain, */*"
             }
-            r = get_session().get(API_SPIN, headers=hdrs, timeout=10)
-            r.raise_for_status()
+
+            r = get_session().get(API_SPIN, headers=headers, timeout=5)
             data = r.json()
 
             reward = data.get("total", 0)
@@ -1233,7 +854,7 @@ def api_spin(info):
 
             if new_cred >= credits and data.get("success") is not True:
                 stuck += 1
-                if stuck > 2:
+                if stuck >= max_stuck:
                     print(f"{T.warning}⚠️  API stopped rewards{C.RESET}")
                     break
             else:
@@ -1244,49 +865,52 @@ def api_spin(info):
             total_reward += reward
             spins += 1
 
-            # Canlı gösterim
-            TerminalManager.clear()
-            print(VisualComponents.status_bar())
-            print()
-            print(Drawer.line("═", color=T.primary))
-            print(Drawer.center(f"{T.accent}{C.BOLD}🎰 SPINNING | {email}{C.RESET}"))
-            print(Drawer.line("═", color=T.primary))
-            print()
-            print(VisualComponents.stats_grid({
-                "Balance": (balance, "💰", T.success),
-                "Reward": (f"+{reward}", "🎁", T.accent),
-                "Spins": (spins, "📊", T.info),
-                "Total": (total_reward, "💎", T.warning),
-                "Credits": (credits, "⏳", T.primary),
-                "Time": (datetime.now().strftime("%H:%M:%S"), "🕐", T.dim),
-            }))
-            print()
-            print(Animator.progress_bar(int(spins * 10), 40, "Progress"))
-            print()
+            # Her 10 spinde bir gösterim
+            if spins % 10 == 0:
+                TerminalManager.clear()
+                print(VisualComponents.status_bar())
+                print()
+                print(Drawer.line("═", color=T.primary))
+                print(Drawer.center(f"{T.accent}{C.BOLD}🎰 SPINNING | {email}{C.RESET}"))
+                print(Drawer.line("═", color=T.primary))
+                print()
+                print(VisualComponents.stats_grid({
+                    "Balance": (balance, "💰", T.success),
+                    "Reward": (f"+{reward}", "🎁", T.accent),
+                    "Spins": (spins, "📊", T.info),
+                    "Total": (total_reward, "💎", T.warning),
+                    "Credits": (credits, "⏳", T.primary),
+                    "Time": (datetime.now().strftime("%H:%M:%S"), "🕐", T.dim),
+                }))
+                print()
+                print(Animator.progress_bar(min(spins * 10, 100), 40, "Progress"))
+                print()
 
-            if data.get("message"):
-                print(f"{T.info}ℹ️  {data['message']}{C.RESET}")
+                if data.get("message"):
+                    print(f"{T.info}ℹ️  {data['message']}{C.RESET}")
 
-            print(Drawer.line("═", color=T.primary))
-            time.sleep(1.2)
+                print(Drawer.line("═", color=T.primary))
+
+            # ULTRA HIZLI - 0.1 saniye bekleme
+            time.sleep(0.1)
 
         except requests.exceptions.ConnectionError:
             print(f"{T.error}⚠️  Connection lost. Retrying...{C.RESET}")
-            time.sleep(5)
+            time.sleep(2)
         except Exception as e:
             print(f"{T.error}⚠️  Spin Error: {str(e)}{C.RESET}")
-            time.sleep(3)
+            time.sleep(1)
 
     return balance, credits, spins, total_reward
 
-def api_ads(uid):
-    """Reklam izleme"""
+def api_ads_fast(uid):
+    """Hızlı reklam izleme"""
     if not uid:
         print(f"{T.error}❌ No User ID{C.RESET}")
         return 0
 
     print(f"\n{T.accent}🚀 Starting Ads Farming...{C.RESET}")
-    hdrs = {
+    headers = {
         "User-Agent": "Mozilla/5.0 (Linux; Android 12; SM-A217F Build/SP1A.210812.016; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/147.0.7727.111 Mobile Safari/537.36",
         "sec-ch-ua-platform": '"Android"',
         "sec-ch-ua-mobile": "?1",
@@ -1302,7 +926,7 @@ def api_ads(uid):
 
     watched = 0
     try:
-        r = get_session().get(ADS_URL, headers=hdrs, timeout=15)
+        r = get_session().get(ADS_URL, headers=headers, timeout=10)
         if "application/json" in r.headers.get("Content-Type", ""):
             nets = r.json().get("ad_networks", [])
             if nets:
@@ -1311,10 +935,10 @@ def api_ads(uid):
                     q = parse_qs(p.query, keep_blank_values=True)
                     q["rwd_userid"] = [uid]
                     nu = urlunparse(p._replace(query=urlencode(q, doseq=True)))
-                    rr = get_session().get(nu, headers=hdrs, timeout=10)
+                    rr = get_session().get(nu, headers=headers, timeout=5)
                     watched += 1
                     print(f"{T.success}✔ Ad #{watched} Watched ({rr.status_code}){C.RESET}")
-                    time.sleep(2)
+                    time.sleep(0.5)
         else:
             print(f"{T.warning}⚠️  Ads returned non-JSON{C.RESET}")
     except requests.exceptions.ConnectionError:
@@ -1325,45 +949,50 @@ def api_ads(uid):
     print(f"{T.success}✅ Ads done: {watched} watched{C.RESET}")
     return watched
 
-def process_account(email, password):
-    """Tek hesap işleme"""
-    print(f"\n{T.accent}🔄 Processing: {email}{C.RESET}")
-    info = api_login(email, password)
-    if not info:
-        print(f"{T.error}⏭️  Skipping {email}{C.RESET}")
+def process_account_247(email, password):
+    """7/24 SINIRSIZ DÖNGÜ - hiç durmaz"""
+    print(f"\n{T.success}{'='*60}{C.RESET}")
+    print(Drawer.center(f"{T.accent}{C.BOLD} 7/24 ULTRA FAST MODE - {email}{C.RESET}"))
+    print(f"{T.success}{'='*60}{C.RESET}\n")
+
+    cycle = 0
+    total_spins_all = 0
+    total_reward_all = 0
+
+    while True:  # SINIRSIZ DÖNGÜ
+        cycle += 1
+        print(f"\n{T.primary}{'='*60}{C.RESET}")
+        print(Drawer.center(f"🔄 CYCLE #{cycle} | {datetime.now().strftime('%H:%M:%S')}"))
+        print(f"{T.primary}{'='*60}{C.RESET}\n")
+
+        # Giriş yap
+        info = api_login(email, password)
+        if not info:
+            print(f"{T.error}❌ Login failed. Retrying in 3s...{C.RESET}")
+            time.sleep(3)
+            continue
+
+        print(f"{T.success}✅ Logged in | Balance: {info['balance']} | Credits: {info['credits']}{C.RESET}")
+
+        # Spin at
+        bal, cred, spins, rew = api_spin_fast(info)
+        total_spins_all += spins
+        total_reward_all += rew
+
+        print(f"\n{T.success}✅ Spins: {spins} | Reward: {rew}{C.RESET}")
+
+        # Reklam izle
+        ads = api_ads_fast(info["user_id"])
+        StatsManager.update(email, spins, rew, ads)
+
+        print(f"{T.success}📺 Ads: {ads} | Total Spins: {total_spins_all} | Total Reward: {total_reward_all}{C.RESET}")
+
+        # ÇOK KISA BEKLE - 2 saniye
+        print(f"\n{T.warning}⏳ Restarting in 2s... (Ctrl+C to stop){C.RESET}")
         time.sleep(2)
-        return
-
-    TerminalManager.clear()
-    print(VisualComponents.status_bar())
-    print()
-    print(VisualComponents.info_card(
-        "ACCOUNT INFO",
-        [
-            ("📧 Email", info['email']),
-            ("💰 Balance", info['balance']),
-            ("🎰 Credits", info['credits']),
-            ("🆔 User ID", info['user_id'][:12] + "..." if info['user_id'] else "N/A"),
-        ],
-        "👤"
-    ))
-    print()
-
-    bal, cred, spins, rew = api_spin(info)
-    ads = api_ads(info["user_id"])
-    StatsManager.update(email, spins, rew, ads)
-
-    print()
-    print(VisualComponents.notification(
-        "CYCLE COMPLETE",
-        f"{spins} spins | {rew} reward | {ads} ads",
-        "success"
-    ))
-    print(f"\n{T.warning}⏳ Cooldown 10s...{C.RESET}")
-    time.sleep(10)
 
 # ═══════════════════════════════════════════════════════════════════
-# 🎯 BÖLÜM 11: ANA MENÜ VE BAŞLATMA
+# BÖLÜM 14: MENÜ SİSTEMİ
 # ═══════════════════════════════════════════════════════════════════
 
 def start_single():
@@ -1375,7 +1004,7 @@ def start_single():
         return
 
     TerminalManager.clear()
-    print(VisualComponents.header("SELECT ACCOUNT", "Choose an account to run", "4.0"))
+    print(VisualComponents.header("SELECT ACCOUNT", "Choose an account to run", "7.0"))
     print()
 
     keys = list(accs.keys())
@@ -1389,7 +1018,9 @@ def start_single():
         return
     try:
         email = keys[int(ch) - 1]
-        process_account(email, accs[email])
+        process_account_247(email, accs[email])
+    except KeyboardInterrupt:
+        print(f"\n\n{T.warning}🛑 Stopped by user{C.RESET}")
     except:
         print(f"{T.error}Invalid choice{C.RESET}")
         time.sleep(1)
@@ -1403,13 +1034,17 @@ def start_multi():
         return
 
     TerminalManager.clear()
-    print(VisualComponents.header("MULTI-ACCOUNT MODE", f"Processing {len(accs)} accounts", "4.0"))
+    print(VisualComponents.header("MULTI-ACCOUNT MODE", f"Processing {len(accs)} accounts", "7.0"))
     print()
     print(VisualComponents.notification("INFO", "Starting all accounts sequentially...", "info"))
     print()
 
     for email, pwd in accs.items():
-        process_account(email, pwd)
+        try:
+            process_account_247(email, pwd)
+        except KeyboardInterrupt:
+            print(f"\n\n{T.warning}🛑 Stopped by user{C.RESET}")
+            break
 
     print()
     Effects.confetti(duration=1.5)
@@ -1420,7 +1055,7 @@ def settings_menu():
     """Ayarlar menüsü"""
     while True:
         TerminalManager.clear()
-        print(VisualComponents.header("SETTINGS", "Configuration & Accounts", "4.0"))
+        print(VisualComponents.header("SETTINGS", "Configuration & Accounts", "7.0"))
         print()
 
         items = [
@@ -1439,7 +1074,7 @@ def settings_menu():
             AccountManager.menu_loop()
         elif ch == '2':
             TerminalManager.clear()
-            print(VisualComponents.header("THEME SELECTOR", "Choose your style", "4.0"))
+            print(VisualComponents.header("THEME SELECTOR", "Choose your style", "7.0"))
             print()
             themes = list(Theme.THEMES.keys())
             for i, t in enumerate(themes, 1):
@@ -1459,10 +1094,10 @@ def settings_menu():
             StatsManager.display_dashboard()
         elif ch == '4':
             TerminalManager.clear()
-            print(VisualComponents.header("SYSTEM INFO", "", "4.0"))
+            print(VisualComponents.header("SYSTEM INFO", "", "7.0"))
             print()
             info_lines = [
-                f"🎰 Bot: FruitClaim Pro v4.0",
+                f"🎰 Bot: FruitClaim Pro v7.0",
                 f"👤 Creator: AlperenThe",
                 f"📅 Year: 2026",
                 f"🖥️  Terminal: {TerminalManager.width()}x{TerminalManager.height()}",
@@ -1478,7 +1113,7 @@ def settings_menu():
 
 def main():
     """Ana fonksiyon"""
-    TerminalManager.set_title("FruitClaim Pro v4.0 - AlperenThe")
+    TerminalManager.set_title("FruitClaim Pro v7.0 - AlperenThe")
 
     # Splash screen
     TerminalManager.clear()
@@ -1492,7 +1127,7 @@ def main():
         "Connecting to API",
         "Preparing dashboard",
         "System ready"
-    ], delay=0.4)
+    ], delay=0.3)
 
     time.sleep(0.5)
     Effects.confetti(duration=0.8)
@@ -1502,7 +1137,7 @@ def main():
         TerminalManager.clear()
         print(VisualComponents.status_bar())
         print()
-        print(VisualComponents.header("FRUITCLAIM PRO", "Ultra Premium Multi-Account Bot", "4.0"))
+        print(VisualComponents.header("FRUITCLAIM PRO", "7/24 Ultra Fast Multi-Account Bot", "7.0"))
         print()
 
         # ASCII logo
@@ -1512,8 +1147,8 @@ def main():
         print()
 
         items = [
-            ("1", "START ONE ACCOUNT", "🎯"),
-            ("2", "START MULTI ACCOUNT", "🚀"),
+            ("1", "START ONE ACCOUNT (7/24)", "🎯"),
+            ("2", "START MULTI ACCOUNT (7/24)", "🚀"),
             ("3", "SETTINGS & ACCOUNTS", "⚙️"),
             ("4", "VIEW STATISTICS", "📊"),
             ("5", "EXIT SYSTEM", "🚪"),
@@ -1533,7 +1168,7 @@ def main():
             StatsManager.display_dashboard()
         elif ch == '5':
             TerminalManager.clear()
-            print(VisualComponents.header("GOODBYE", "Thanks for using FruitClaim Pro", "4.0"))
+            print(VisualComponents.header("GOODBYE", "Thanks for using FruitClaim Pro", "7.0"))
             print()
             print(Drawer.center(f"{T.accent}👋 See you soon!{C.RESET}"))
             print()
