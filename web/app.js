@@ -1,133 +1,18 @@
 (() => {
-  "use strict";
-  const config = window.PAIDMX_CONFIG || {};
-  const tg = window.Telegram?.WebApp;
-  const $ = (id) => document.getElementById(id);
-  let dashboard = null;
-  let toastTimer = null;
-
-  if (tg) {
-    tg.ready();
-    tg.expand();
-    try { tg.setHeaderColor("#0b1020"); tg.setBackgroundColor("#0b1020"); } catch (_) {}
-  }
-
-  function toast(message) {
-    const node = $("toast");
-    node.textContent = message;
-    node.classList.add("show");
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => node.classList.remove("show"), 2400);
-    try { tg?.HapticFeedback?.notificationOccurred("success"); } catch (_) {}
-  }
-
-  function showAuthError(message) {
-    $("auth-error-text").textContent = message;
-    $("auth-error").classList.remove("hidden");
-    const bot = String(config.botUsername || "").replace(/^@/, "");
-    if (bot) {
-      $("open-bot").href = "https://t.me/" + encodeURIComponent(bot);
-      $("open-bot").classList.remove("hidden");
-    }
-  }
-
-  async function rpc(method) {
-    if (!config.apiUrl) throw new Error("API adresi yapılandırılmamış.");
-    const initData = tg?.initData || "";
-    if (!initData) throw new Error("Telegram Mini App oturumu bulunamadı. Uygulamayı botun içinden aç.");
-    const response = await fetch(config.apiUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "X-Telegram-Init-Data": initData },
-      body: JSON.stringify({ rpc: method })
-    });
-    let data;
-    try { data = await response.json(); } catch (_) { throw new Error("Sunucudan geçersiz yanıt alındı."); }
-    if (!response.ok || !data.ok) {
-      const errors = {
-        telegram_auth_expired: "Telegram oturumunun süresi dolmuş. Mini App'i kapatıp tekrar aç.",
-        telegram_auth_invalid: "Telegram doğrulaması başarısız. Lütfen yeniden giriş yap.",
-        user_banned: "Bu hesap için erişim kapatılmış."
-      };
-      throw new Error(errors[data.error] || "Sunucu isteği başarısız (" + response.status + ").");
-    }
-    return data;
-  }
-
-  function pmx(micros) {
-    const value = Number(micros || 0) / 1000000;
-    return value.toLocaleString("tr-TR", { minimumFractionDigits: 0, maximumFractionDigits: 6 });
-  }
-
-  function render(data) {
-    dashboard = data;
-    const user = data.user || {};
-    const wallet = data.wallet || {};
-    const name = user.firstName || user.username || "PaidMX üyesi";
-    $("first-name").textContent = name;
-    $("avatar").textContent = (name.trim()[0] || "P").toUpperCase();
-    if (user.photoUrl) $("avatar").style.backgroundImage = "url('" + user.photoUrl.replace(/['()\\]/g, "") + "')";
-    $("balance").innerHTML = pmx(wallet.balanceMicros) + " <small>PMX</small>";
-    $("wallet-balance").textContent = pmx(wallet.balanceMicros) + " PMX";
-    $("wallet-debt").textContent = pmx(wallet.debtMicros) + " PMX";
-    $("debt-label").textContent = Number(wallet.debtMicros || 0) > 0 ? "Borç: " + pmx(wallet.debtMicros) + " PMX" : "";
-    $("ref-count").textContent = Number(user.referralCount || 0).toLocaleString("tr-TR");
-    $("invite-total").textContent = Number(user.referralCount || 0).toLocaleString("tr-TR");
-    $("ref-earnings").textContent = pmx(user.referralEarningsMicros) + " PMX";
-    $("invite-earned").textContent = pmx(user.referralEarningsMicros) + " PMX";
-    if (data.admin) $("admin-pill").classList.remove("hidden");
-
-    const bot = String(config.botUsername || "").replace(/^@/, "");
-    const code = String(user.referralCode || "");
-    const link = bot && code ? "https://t.me/" + encodeURIComponent(bot) + "?startapp=ref_" + encodeURIComponent(code) : "";
-    $("ref-link").textContent = link || "Bot kullanıcı adı config.js dosyasına eklenmeli.";
-    $("copy-ref").disabled = !link;
-    $("share-ref").disabled = !link;
-    $("copy-ref").dataset.link = link;
-    $("share-ref").dataset.link = link;
-  }
-
-  function switchTab(tab) {
-    ["home", "tasks", "invite", "wallet"].forEach(name => {
-      const panel = $(name + "-panel");
-      if (panel) panel.classList.toggle("hidden", name !== tab);
-    });
-    document.querySelectorAll(".nav-item").forEach(button => button.classList.toggle("active", button.dataset.tab === tab));
-    try { tg?.HapticFeedback?.selectionChanged(); } catch (_) {}
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  }
-
-  document.querySelectorAll("[data-tab]").forEach(button => button.addEventListener("click", () => switchTab(button.dataset.tab)));
-  $("copy-ref").addEventListener("click", async () => {
-    const link = $("copy-ref").dataset.link;
-    if (!link) return;
-    try {
-      if (navigator.clipboard?.writeText) await navigator.clipboard.writeText(link);
-      else if (tg?.shareUrl) { tg.shareUrl(link); return; }
-      else throw new Error("copy");
-      toast("Davet bağlantısı kopyalandı.");
-    } catch (_) { toast("Bağlantı kopyalanamadı; uzun basarak seçebilirsin."); }
-  });
-  $("share-ref").addEventListener("click", () => {
-    const link = $("share-ref").dataset.link;
-    if (!link) return;
-    const text = "PaidMX'e katıl, görevleri keşfet ve birlikte büyüyelim!";
-    const shareUrl = "https://t.me/share/url?url=" + encodeURIComponent(link) + "&text=" + encodeURIComponent(text);
-    if (tg?.openTelegramLink) tg.openTelegramLink(shareUrl);
-    else window.open(shareUrl, "_blank", "noopener,noreferrer");
-  });
-
-  async function boot() {
-    if (!tg?.initData) {
-      showAuthError("Bu arayüz Telegram Mini App olarak açılmalıdır. Botun menüsündeki uygulama butonunu kullan.");
-      return;
-    }
-    try {
-      const data = await rpc("getDashboard");
-      render(data);
-    } catch (error) {
-      showAuthError(error.message || "PaidMX API bağlantısı kurulamadı.");
-    }
-  }
-
-  boot();
+"use strict";
+const cfg=window.PAIDMX_CONFIG||{},tg=window.Telegram?.WebApp,$=id=>document.getElementById(id);
+let toastTimer;
+if(tg){tg.ready();tg.expand();try{tg.setHeaderColor("#102f53");tg.setBackgroundColor("#07172b");}catch(_){}}
+function toast(s){const n=$("toast");n.textContent=s;n.classList.add("show");clearTimeout(toastTimer);toastTimer=setTimeout(()=>n.classList.remove("show"),2200);try{tg?.HapticFeedback?.notificationOccurred("success")}catch(_){}}
+function authError(s){$("auth-error-text").textContent=s;$("auth-error").classList.remove("hidden");const bot=String(cfg.botUsername||"").replace(/^@/,"");if(bot){$("open-bot").href="https://t.me/"+encodeURIComponent(bot);$("open-bot").classList.remove("hidden")}}
+async function rpc(method){if(!cfg.apiUrl)throw Error("API adresi yapılandırılmamış.");if(!tg?.initData)throw Error("Telegram Mini App oturumu bulunamadı.");const r=await fetch(cfg.apiUrl,{method:"POST",headers:{"Content-Type":"application/json","X-Telegram-Init-Data":tg.initData},body:JSON.stringify({rpc:method})});let d;try{d=await r.json()}catch(_){throw Error("Sunucudan geçersiz yanıt alındı.")}if(!r.ok||!d.ok){const m={telegram_auth_expired:"Telegram oturumunun süresi dolmuş. Mini App'i yeniden aç.",telegram_auth_invalid:"Telegram doğrulaması başarısız.",user_banned:"Bu hesap için erişim kapatılmış."};throw Error(m[d.error]||"API isteği başarısız ("+r.status+").")}return d}
+function fmt(v){return (Number(v||0)/1e6).toLocaleString("tr-TR",{maximumFractionDigits:6})}
+function render(d){const u=d.user||{},w=d.wallet||{},name=u.firstName||u.username||"PaidMX üyesi";$("first-name").textContent=name;$("profile-avatar").textContent=(name[0]||"P").toUpperCase();if(u.photoUrl)$("profile-avatar").style.backgroundImage="url('"+u.photoUrl.replace(/['()\\]/g,"")+"')";const bal=fmt(w.balanceMicros)+" PMX",debt=fmt(w.debtMicros)+" PMX";$("balance").innerHTML=fmt(w.balanceMicros)+' <small>PMX</small>';$("wallet-balance").textContent=bal;$("wallet-available").textContent=bal;$("wallet-debt").textContent=debt;$("home-wallet").textContent=bal;$("home-debt").textContent=debt;$("debt-label").textContent=Number(w.debtMicros||0)>0?"Borç: "+debt:"";$("ref-count").textContent=Number(u.referralCount||0).toLocaleString("tr-TR");$("invite-total").textContent=$("ref-count").textContent;$("ref-earnings").textContent=fmt(u.referralEarningsMicros)+" PMX";$("invite-earned").textContent=fmt(u.referralEarningsMicros)+" PMX";if(d.admin)$("admin-pill").classList.remove("hidden");const bot=String(cfg.botUsername||"").replace(/^@/,""),code=String(u.referralCode||""),link=bot&&code?"https://t.me/"+encodeURIComponent(bot)+"?startapp=ref_"+encodeURIComponent(code):"";$("ref-link").textContent=link||"Bot kullanıcı adı config.js dosyasına eklenmeli.";$("copy-ref").dataset.link=link;$("share-ref").dataset.link=link;$("copy-ref").disabled=!link;$("share-ref").disabled=!link}
+function tab(name){document.querySelectorAll(".screen").forEach(s=>s.classList.toggle("active",s.id==="screen-"+name));document.querySelectorAll(".nav-item").forEach(b=>b.classList.toggle("active",b.dataset.tab===name));try{tg?.HapticFeedback?.selectionChanged()}catch(_){}window.scrollTo({top:0,behavior:"smooth"})}
+document.querySelectorAll("[data-tab]").forEach(b=>b.addEventListener("click",()=>tab(b.dataset.tab)));
+$("copy-ref").addEventListener("click",async()=>{const l=$("copy-ref").dataset.link;if(!l)return;try{if(navigator.clipboard?.writeText)await navigator.clipboard.writeText(l);else throw Error();toast("Davet bağlantısı kopyalandı.")}catch(_){toast("Bağlantıyı kopyalamak için uzun bas.")}});
+$("share-ref").addEventListener("click",()=>{const l=$("share-ref").dataset.link;if(!l)return;const u="https://t.me/share/url?url="+encodeURIComponent(l)+"&text="+encodeURIComponent("PaidMX'e katıl!");if(tg?.openTelegramLink)tg.openTelegramLink(u);else window.open(u,"_blank","noopener,noreferrer")});
+document.querySelectorAll(".filter").forEach(b=>b.addEventListener("click",()=>{document.querySelectorAll(".filter").forEach(x=>x.classList.toggle("active",x===b));toast("Bu görev kategorisi sağlayıcı entegrasyonu bekliyor.")}));
+async function boot(){if(!tg?.initData){authError("PaidMX'i Telegram botunun Mini App butonundan açmalısın.");return}try{render(await rpc("getDashboard"))}catch(e){authError(e.message||"PaidMX API bağlantısı kurulamadı.")}}
+boot();
 })();
