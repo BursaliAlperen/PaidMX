@@ -5,6 +5,7 @@ set -Eeuo pipefail
 # Required Stormkit server-side environment variables:
 #   FIREBASE_SERVICE_ACCOUNT_JSON  Full service-account JSON (secret)
 #   BOT_TOKEN                      Telegram bot token (secret)
+#   OFFERWALLAPI_SECRET            OfferwallApi publisher secret (secret)
 #   ADMIN_IDS                      Comma-separated Telegram numeric IDs
 #   CORS_ORIGINS                   Comma-separated exact frontend origins
 #
@@ -12,6 +13,7 @@ set -Eeuo pipefail
 
 : "${FIREBASE_SERVICE_ACCOUNT_JSON:?Missing FIREBASE_SERVICE_ACCOUNT_JSON}"
 : "${BOT_TOKEN:?Missing BOT_TOKEN}"
+: "${OFFERWALLAPI_SECRET:?Missing OFFERWALLAPI_SECRET}"
 : "${ADMIN_IDS:?Missing ADMIN_IDS}"
 : "${CORS_ORIGINS:?Missing CORS_ORIGINS}"
 
@@ -28,6 +30,7 @@ trap cleanup EXIT
 umask 077
 printf '%s' "$FIREBASE_SERVICE_ACCOUNT_JSON" > "$TMP_DIR/firebase-service-account.json"
 printf '%s' "$BOT_TOKEN" > "$TMP_DIR/bot-token"
+printf '%s' "$OFFERWALLAPI_SECRET" > "$TMP_DIR/offerwallapi-secret"
 
 export GOOGLE_APPLICATION_CREDENTIALS="$TMP_DIR/firebase-service-account.json"
 
@@ -38,6 +41,8 @@ printf 'ADMIN_IDS="%s"\nCORS_ORIGINS="%s"\n' "$ADMIN_IDS" "$CORS_ORIGINS" > "$FU
 cd "$ROOT_DIR"
 npx --yes firebase-tools@latest functions:secrets:set BOT_TOKEN \
   --data-file "$TMP_DIR/bot-token" --project "$PROJECT_ID" --force
+npx --yes firebase-tools@latest functions:secrets:set OFFERWALLAPI_SECRET \
+  --data-file "$TMP_DIR/offerwallapi-secret" --project "$PROJECT_ID" --force
 
 npx --yes firebase-tools@latest deploy \
   --only functions,firestore:rules \
