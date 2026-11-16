@@ -10,7 +10,7 @@
     "deploy": "firebase deploy --only functions,firestore:rules",
     "logs": "firebase functions:log",
     "test": "node --test",
-    "check": "node --check index.js && node --check lib/offerwall-security.js && npm test"
+    "check": "node --check index.js && node --check lib/offerwall-security.js && node --check lib/telegram-auth.js && npm test"
   },
   "dependencies": {
     "firebase-admin": "^13.0.0",
