@@ -90,6 +90,9 @@ async function handleOfferwallApiPostback(req, res) {
       const eventSnap = await tx.get(eventRef);
       if (eventSnap.exists) {
         const existing = eventSnap.data();
+        if (existing.userId !== subId || Number(existing.rewardMicros) !== rewardMicros) {
+          throw new Error("transaction_identity_conflict");
+        }
         if (existing.state === "reversed" || existing.state === "reversed_before_credit") return;
         if (status === "1") return; // Duplicate credit delivery.
         if (status !== "2" || existing.state !== "credited") {
@@ -106,6 +109,7 @@ async function handleOfferwallApiPostback(req, res) {
         }
         const debit = Math.min(balance, Number(existing.rewardMicros));
         const debtAdded = Number(existing.rewardMicros) - debit;
+        if (!Number.isSafeInteger(debt + debtAdded)) throw new Error("wallet_overflow");
         tx.set(walletRef, {
           balanceMicros: balance - debit,
           debtMicros: debt + debtAdded,
@@ -141,6 +145,7 @@ async function handleOfferwallApiPostback(req, res) {
 
       const debtPaid = Math.min(debt, rewardMicros);
       const availableCredit = rewardMicros - debtPaid;
+      if (!Number.isSafeInteger(balance + availableCredit)) throw new Error("wallet_overflow");
       tx.set(walletRef, {
         balanceMicros: balance + availableCredit,
         debtMicros: debt - debtPaid,
