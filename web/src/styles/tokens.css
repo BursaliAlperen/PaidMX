@@ -1,0 +1,46 @@
+:root {
+  color-scheme: dark;
+
+  /* PaidMX palette */
+  --bg: #080F1D;
+  --surface: #101B2D;
+  --elevated: #17263B;
+  --elevated-2: #1E3049;
+  --primary: #43B9FF;
+  --primary-soft: rgba(67, 185, 255, 0.14);
+  --secondary: #7186FF;
+  --secondary-soft: rgba(113, 134, 255, 0.14);
+  --success: #35D6A0;
+  --success-soft: rgba(53, 214, 160, 0.14);
+  --warning: #F5BE62;
+  --warning-soft: rgba(245, 190, 98, 0.14);
+  --danger: #FF6B7A;
+  --danger-soft: rgba(255, 107, 122, 0.14);
+  --text: #F5F8FC;
+  --muted: #8FA1B8;
+  --muted-2: #5F7189;
+  --border: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.14);
+
+  /* Gradient accents */
+  --gradient-primary: linear-gradient(135deg, #43B9FF 0%, #7186FF 100%);
+  --gradient-success: linear-gradient(135deg, #35D6A0 0%, #43B9FF 100%);
+  --gradient-surface: linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0));
+
+  /* Radii & elevation */
+  --radius-xl: 24px;
+  --radius-lg: 18px;
+  --radius-md: 14px;
+  --radius-sm: 10px;
+  --shadow-card: 0 12px 32px rgba(0, 0, 0, 0.35);
+  --shadow-pop: 0 24px 64px rgba(0, 0, 0, 0.5);
+  --shadow-glow: 0 0 0 1px rgba(67, 185, 255, 0.25), 0 12px 40px rgba(67, 185, 255, 0.18);
+
+  /* Type */
+  --font: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-display: "Space Grotesk", "Inter", system-ui, sans-serif;
+
+  --header-h: 64px;
+  --sidebar-w: 248px;
+  --nav-h: 68px;
+}

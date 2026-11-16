@@ -5,6 +5,7 @@ const { getFirestore, FieldValue } = require("firebase-admin/firestore");
 const crypto = require("node:crypto");
 const { parseRewardMicros, verifyOfferwallSignature } = require("./lib/offerwall-security");
 const { verifyTelegramInitData } = require("./lib/telegram-auth");
+const { isClaimAllowed, secondsUntilClaim } = require("./lib/faucet");
 
 initializeApp();
 const db = getFirestore();
@@ -14,6 +15,34 @@ const OFFERWALLAPI_KEY = defineSecret("OFFERWALLAPI_KEY");
 const OFFERWALLAPI_BEARER = defineSecret("OFFERWALLAPI_BEARER");
 
 const ADMIN_IDS = new Set((process.env.ADMIN_IDS || "").split(",").map(v => v.trim()).filter(Boolean));
+
+// Server-side faucet economy. Values are configurable via environment variables;
+// the defaults below are documented in README_FIREBASE.md and reported in the
+// faucet RPC so the frontend never hardcodes them.
+function intEnv(name, def) {
+  const v = Number(process.env[name]);
+  return Number.isFinite(v) && v > 0 ? v : def;
+}
+const FAUCET_REWARD_MICROS = intEnv("FAUCET_REWARD_MICROS", 100000);   // 0.1 PMX
+const FAUCET_COOLDOWN_SECONDS = intEnv("FAUCET_COOLDOWN_SECONDS", 3600); // 60 min
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+const ACTIVE_WINDOW_MS = 7 * DAY_MS;
+
+function nowSeconds() {
+  return Math.floor(Date.now() / 1000);
+}
+
+function txEntry(userId, type, amountMicros, meta = {}) {
+  return {
+    userId,
+    type,
+    amountMicros: Number(amountMicros) || 0,
+    title: String(meta.title || "").slice(0, 160),
+    refId: String(meta.refId || "").slice(0, 200),
+    createdAt: FieldValue.serverTimestamp()
+  };
+}
 
 function offerwallFields(req) {
   if (req.body && typeof req.body === "object" && !Buffer.isBuffer(req.body)) {
@@ -60,6 +89,8 @@ async function handleOfferwallApiPostback(req, res) {
   const txKey = crypto.createHash("sha256").update("offerwallapi:" + transId).digest("hex");
   const eventRef = db.collection("providerTransactions").doc(txKey);
   const walletRef = db.collection("wallets").doc(subId);
+  const statsRef = db.collection("stats").doc("app");
+  const transactionsCol = db.collection("transactions");
 
   try {
     await db.runTransaction(async tx => {
@@ -96,6 +127,10 @@ async function handleOfferwallApiPostback(req, res) {
           state: "reversed", status: 2, debitedMicros: debit,
           debtAddedMicros: debtAdded, reversedAt: FieldValue.serverTimestamp()
         });
+        if (debit > 0) {
+          tx.create(transactionsCol.doc(), txEntry(subId, "chargeback", -debit, { title: "Offerwall chargeback", refId: transId }));
+          tx.set(statsRef, { totalChargebacksMicros: FieldValue.increment(debit) }, { merge: true });
+        }
         return;
       }
 
@@ -137,6 +172,12 @@ async function handleOfferwallApiPostback(req, res) {
         country: String(p.country || "").slice(0, 2),
         createdAt: FieldValue.serverTimestamp()
       });
+      if (availableCredit > 0) {
+        tx.create(transactionsCol.doc(), txEntry(subId, "task_reward", availableCredit, { title: p.offer_name || "Task reward", refId: transId }));
+        tx.set(statsRef, {
+          totalTaskRewardsMicros: FieldValue.increment(availableCredit)
+        }, { merge: true });
+      }
     });
     return res.status(200).type("text/plain").send("ok");
   } catch (err) {
@@ -158,12 +199,11 @@ function allowedOrigin(origin) {
   return !!origin && configured.includes(origin);
 }
 
-
 async function fetchQuickTasks(userId, userIp) {
   const apiKey = OFFERWALLAPI_KEY.value();
   const bearer = OFFERWALLAPI_BEARER.value();
   if (!apiKey || !bearer) throw new Error("offerwall_credentials_missing");
-  const ip = /^\\d{1,3}(?:\\.\\d{1,3}){3}$/.test(userIp) ? userIp : "0.0.0.0";
+  const ip = /^\d{1,3}(?:\.\d{1,3}){3}$/.test(userIp) ? userIp : "0.0.0.0";
   const feeds = [["ptc", "ptc-api"], ["video", "video-api"], ["shortlink", "sl-api"]];
   const results = await Promise.all(feeds.map(async ([type, endpoint]) => {
     const url = "https://offerwallapi.com/" + endpoint + "/" + encodeURIComponent(apiKey) + "/" + encodeURIComponent(userId) + "/" + ip;
@@ -181,6 +221,169 @@ async function fetchQuickTasks(userId, userIp) {
     if (item.type !== "shortlink" && (!Number.isFinite(duration) || duration < 1 || duration > 180)) return false;
     try { const target = new URL(String(item.url || "")); return target.protocol === "https:" && target.hostname === "offerwallapi.com"; } catch { return false; }
   }).slice(0, 100);
+}
+
+function mapTask(item) {
+  return {
+    id: String(item.id || ""),
+    type: item.type,
+    title: String(item.title || "Short task"),
+    description: String(item.description || ""),
+    reward: String(item.reward || "0"),
+    currency: String(item.currency_name || "PMX"),
+    duration: Number(item.duration || 0),
+    url: String(item.url || "")
+  };
+}
+
+async function getDashboardData(telegramUser) {
+  const userRef = db.collection("users").doc(telegramUser.id);
+  const walletRef = db.collection("wallets").doc(telegramUser.id);
+  const [profileSnap, walletSnap] = await Promise.all([userRef.get(), walletRef.get()]);
+  const profile = profileSnap.data() || {};
+  const wallet = walletSnap.data() || {};
+
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+
+  let todayEarningsMicros = 0;
+  let todayTasksCompleted = 0;
+  let recentActivity = [];
+  try {
+    const todaySnap = await db.collection("transactions")
+      .where("userId", "==", telegramUser.id)
+      .where("createdAt", ">=", todayStart)
+      .orderBy("createdAt", "desc")
+      .limit(200)
+      .get();
+    for (const doc of todaySnap.docs) {
+      const t = doc.data();
+      const amount = Number(t.amountMicros || 0);
+      if (amount > 0) todayEarningsMicros += amount;
+      if (t.type === "task_reward") todayTasksCompleted += 1;
+    }
+    const recentSnap = await db.collection("transactions")
+      .where("userId", "==", telegramUser.id)
+      .orderBy("createdAt", "desc")
+      .limit(10)
+      .get();
+    recentActivity = recentSnap.docs.map(doc => {
+      const t = doc.data();
+      return {
+        id: doc.id,
+        type: String(t.type || "adjustment"),
+        amountMicros: Number(t.amountMicros || 0),
+        title: String(t.title || ""),
+        refId: String(t.refId || ""),
+        createdAt: t.createdAt ? t.createdAt.toMillis() : 0
+      };
+    });
+  } catch (e) {
+    // Transaction index may not exist yet; degrade gracefully.
+    console.error("getDashboard transactions query failed:", e.message);
+  }
+
+  return {
+    user: {
+      id: telegramUser.id,
+      firstName: String(profile.firstName || ""),
+      username: String(profile.username || ""),
+      photoUrl: String(profile.photoUrl || ""),
+      referralCode: String(profile.referralCode || ""),
+      referralCount: Number(profile.referralCount || 0),
+      referralEarningsMicros: Number(profile.referralEarningsMicros || 0),
+      totalEarnedMicros: Number(profile.totalEarnedMicros || 0),
+      totalTasksCompleted: Number(profile.totalTasksCompleted || 0),
+      lang: String(profile.lang || "tr"),
+      createdAt: profile.createdAt ? profile.createdAt.toMillis() : 0
+    },
+    wallet: {
+      balanceMicros: Number(wallet.balanceMicros || 0),
+      debtMicros: Number(wallet.debtMicros || 0),
+      currency: "PMX"
+    },
+    stats: {
+      todayEarningsMicros,
+      todayTasksCompleted,
+      totalEarningsMicros: Number(profile.totalEarnedMicros || 0),
+      totalTasksCompleted: Number(profile.totalTasksCompleted || 0),
+      totalReferrals: Number(profile.referralCount || 0)
+    },
+    recentActivity,
+    admin: ADMIN_IDS.has(telegramUser.id)
+  };
+}
+
+async function handleClaimFaucet(telegramUser) {
+  const walletRef = db.collection("wallets").doc(telegramUser.id);
+  const faucetRef = db.collection("faucetClaims").doc(telegramUser.id);
+  const statsRef = db.collection("stats").doc("app");
+  const now = nowSeconds();
+  const reward = FAUCET_REWARD_MICROS;
+
+  let result;
+  await db.runTransaction(async tx => {
+    const walletSnap = await tx.get(walletRef);
+    if (!walletSnap.exists) throw new Error("user_wallet_not_found");
+    const wallet = walletSnap.data();
+    const balance = Number(wallet.balanceMicros || 0);
+    const debt = Number(wallet.debtMicros || 0);
+    if (!Number.isSafeInteger(balance) || !Number.isSafeInteger(debt) || balance < 0 || debt < 0) {
+      throw new Error("wallet_state_invalid");
+    }
+
+    const faucetSnap = await tx.get(faucetRef);
+    const lastClaimAt = faucetSnap.exists ? Number(faucetSnap.data().lastClaimAt || 0) : 0;
+    if (!isClaimAllowed(lastClaimAt, FAUCET_COOLDOWN_SECONDS, now)) {
+      throw new Error("faucet_cooldown");
+    }
+
+    const debtPaid = Math.min(debt, reward);
+    const availableCredit = reward - debtPaid;
+    if (!Number.isSafeInteger(balance + availableCredit)) throw new Error("wallet_overflow");
+
+    tx.set(walletRef, {
+      balanceMicros: balance + availableCredit,
+      debtMicros: debt - debtPaid,
+      currency: "PMX",
+      updatedAt: FieldValue.serverTimestamp()
+    }, { merge: true });
+
+    const prevClaims = faucetSnap.exists ? Number(faucetSnap.data().totalClaims || 0) : 0;
+    const prevEarned = faucetSnap.exists ? Number(faucetSnap.data().totalEarnedMicros || 0) : 0;
+    tx.set(faucetRef, {
+      userId: telegramUser.id,
+      lastClaimAt: now,
+      totalClaims: prevClaims + 1,
+      totalEarnedMicros: prevEarned + reward,
+      updatedAt: FieldValue.serverTimestamp()
+    }, { merge: true });
+
+    tx.create(db.collection("transactions").doc(), txEntry(telegramUser.id, "faucet_claim", reward, { title: "Faucet claim" }));
+    tx.set(statsRef, { totalFaucetRewardsMicros: FieldValue.increment(reward) }, { merge: true });
+
+    result = { claimedMicros: reward, creditedMicros: availableCredit, debtPaidMicros: debtPaid };
+  });
+
+  return result;
+}
+
+async function getFaucetState(telegramUser) {
+  const faucetRef = db.collection("faucetClaims").doc(telegramUser.id);
+  const snap = await faucetRef.get();
+  const data = snap.exists ? snap.data() : {};
+  const lastClaimAt = Number(data.lastClaimAt || 0);
+  const now = nowSeconds();
+  return {
+    rewardMicros: FAUCET_REWARD_MICROS,
+    cooldownSeconds: FAUCET_COOLDOWN_SECONDS,
+    lastClaimAt,
+    nextClaimAt: lastClaimAt + FAUCET_COOLDOWN_SECONDS,
+    canClaim: isClaimAllowed(lastClaimAt, FAUCET_COOLDOWN_SECONDS, now),
+    secondsUntilClaim: secondsUntilClaim(lastClaimAt, FAUCET_COOLDOWN_SECONDS, now),
+    totalClaims: Number(data.totalClaims || 0),
+    totalEarnedMicros: Number(data.totalEarnedMicros || 0)
+  };
 }
 
 exports.api = onRequest(
@@ -204,7 +407,9 @@ exports.api = onRequest(
     try {
       const initData = req.get("X-Telegram-Init-Data") || req.body?.initData;
       const telegramUser = verifyTelegramInitData(initData, BOT_TOKEN.value());
-      const rpc = String(req.body?.rpc || "").slice(0, 64);
+      const body = req.body && typeof req.body === "object" ? req.body : {};
+      const rpc = String(body.rpc || "").slice(0, 64);
+      const payload = body.payload && typeof body.payload === "object" ? body.payload : {};
 
       // Create/update the Telegram identity only after cryptographic initData validation.
       const userRef = db.collection("users").doc(telegramUser.id);
@@ -212,6 +417,7 @@ exports.api = onRequest(
       const generatedReferralCode = crypto.randomBytes(6).toString("hex");
       const referralMatch = /^ref_([A-Za-z0-9_-]{6,20})$/.exec(telegramUser.startParam || "");
       const incomingReferralCode = referralMatch ? referralMatch[1] : null;
+      const statsRef = db.collection("stats").doc("app");
 
       await db.runTransaction(async tx => {
         const snap = await tx.get(userRef);
@@ -256,8 +462,10 @@ exports.api = onRequest(
           tx.create(userRef, {
             ...safeProfile, balanceGr: 0, playsTotal: 0, banned: false,
             referralCount: 0, referralEarningsMicros: 0,
+            totalEarnedMicros: 0, totalTasksCompleted: 0,
             lang: "tr", createdAt: FieldValue.serverTimestamp()
           });
+          tx.set(statsRef, { totalUsers: FieldValue.increment(1) }, { merge: true });
         } else {
           tx.set(userRef, safeProfile, { merge: true });
         }
@@ -282,6 +490,7 @@ exports.api = onRequest(
             referralCount: FieldValue.increment(1),
             updatedAt: FieldValue.serverTimestamp()
           }, { merge: true });
+          tx.set(statsRef, { totalReferrals: FieldValue.increment(1) }, { merge: true });
         }
 
         if (!walletSnap.exists) {
@@ -297,41 +506,108 @@ exports.api = onRequest(
         const forwarded = String(req.get("x-forwarded-for") || "").split(",")[0].trim();
         const remoteIp = String(req.ip || forwarded || "").replace(/^::ffff:/, "");
         const tasks = await fetchQuickTasks(telegramUser.id, remoteIp);
-        return send(res, 200, { ok: true, tasks });
+        return send(res, 200, { ok: true, tasks: tasks.map(mapTask) });
       }
 
       if (rpc === "authCheck" || rpc === "getDashboard") {
-        const [profileSnap, walletSnap] = await Promise.all([userRef.get(), walletRef.get()]);
-        const profile = profileSnap.data() || {};
-        const wallet = walletSnap.data() || {};
+        return send(res, 200, { ok: true, ...(await getDashboardData(telegramUser)) });
+      }
+
+      if (rpc === "getFaucet") {
+        return send(res, 200, { ok: true, faucet: await getFaucetState(telegramUser) });
+      }
+
+      if (rpc === "claimFaucet") {
+        const { claimedMicros, creditedMicros, debtPaidMicros } = await handleClaimFaucet(telegramUser);
         return send(res, 200, {
           ok: true,
-          user: {
-            id: telegramUser.id,
-            firstName: String(profile.firstName || ""),
-            username: String(profile.username || ""),
-            photoUrl: String(profile.photoUrl || ""),
-            referralCode: String(profile.referralCode || ""),
-            referralCount: Number(profile.referralCount || 0),
-            referralEarningsMicros: Number(profile.referralEarningsMicros || 0)
-          },
-          wallet: {
-            balanceMicros: Number(wallet.balanceMicros || 0),
-            debtMicros: Number(wallet.debtMicros || 0),
-            currency: "PMX"
-          },
-          admin: ADMIN_IDS.has(telegramUser.id)
+          claimedMicros, creditedMicros, debtPaidMicros,
+          faucet: await getFaucetState(telegramUser)
+        });
+      }
+
+      if (rpc === "getTransactions") {
+        const limit = Math.min(Math.max(Number(payload.limit) || 50, 1), 100);
+        const snap = await db.collection("transactions")
+          .where("userId", "==", telegramUser.id)
+          .orderBy("createdAt", "desc")
+          .limit(limit)
+          .get();
+        const transactions = snap.docs.map(doc => {
+          const t = doc.data();
+          return {
+            id: doc.id,
+            type: String(t.type || "adjustment"),
+            amountMicros: Number(t.amountMicros || 0),
+            title: String(t.title || ""),
+            refId: String(t.refId || ""),
+            createdAt: t.createdAt ? t.createdAt.toMillis() : 0
+          };
+        });
+        return send(res, 200, { ok: true, transactions });
+      }
+
+      if (rpc === "getReferrals") {
+        const snap = await db.collection("referrals")
+          .where("referrerId", "==", telegramUser.id)
+          .orderBy("createdAt", "desc")
+          .limit(100)
+          .get();
+        const referrals = await Promise.all(snap.docs.map(async doc => {
+          const data = doc.data();
+          const refUserSnap = await db.collection("users").doc(String(data.referredUserId || "")).get();
+          const refUser = refUserSnap.exists ? refUserSnap.data() : {};
+          return {
+            referredUserId: String(data.referredUserId || ""),
+            firstName: String(refUser.firstName || ""),
+            username: String(refUser.username || ""),
+            createdAt: data.createdAt ? data.createdAt.toMillis() : 0
+          };
+        }));
+        return send(res, 200, { ok: true, referrals });
+      }
+
+      if (rpc === "setPreferences") {
+        const lang = String(payload.lang || "").slice(0, 8);
+        if (!["tr", "en"].includes(lang)) return send(res, 400, { ok: false, error: "invalid_lang" });
+        await userRef.set({ lang }, { merge: true });
+        return send(res, 200, { ok: true });
+      }
+
+      if (rpc === "adminStats") {
+        if (!ADMIN_IDS.has(telegramUser.id)) return send(res, 403, { ok: false, error: "forbidden" });
+        const statsSnap = await db.collection("stats").doc("app").get();
+        const stats = statsSnap.exists ? statsSnap.data() : {};
+        const activeSince = new Date(Date.now() - ACTIVE_WINDOW_MS);
+        const [activeUsersSnap, providerCountSnap, recentProviderSnap] = await Promise.all([
+          db.collection("users").where("lastSeenAt", ">", activeSince).count().get(),
+          db.collection("providerTransactions").count().get(),
+          db.collection("providerTransactions").where("createdAt", ">", activeSince).count().get()
+        ]);
+        return send(res, 200, {
+          ok: true,
+          stats: {
+            totalUsers: Number(stats.totalUsers || 0),
+            activeUsers7d: activeUsersSnap.data().count,
+            totalTaskRewardsMicros: Number(stats.totalTaskRewardsMicros || 0),
+            totalFaucetRewardsMicros: Number(stats.totalFaucetRewardsMicros || 0),
+            totalReferrals: Number(stats.totalReferrals || 0),
+            totalChargebacksMicros: Number(stats.totalChargebacksMicros || 0),
+            providerEvents: providerCountSnap.data().count,
+            providerEvents7d: recentProviderSnap.data().count,
+            faucetRewardMicros: FAUCET_REWARD_MICROS,
+            faucetCooldownSeconds: FAUCET_COOLDOWN_SECONDS
+          }
         });
       }
 
       // Remaining legacy RPCs are deliberately not stubbed with fake success.
-      // Implement each action against Firestore transactions before switching the live frontend.
       return send(res, 501, { ok: false, error: "rpc_not_migrated", rpc });
     } catch (err) {
       const code = String(err?.message || "internal_error");
-      const status = code.startsWith("telegram_") ? 401 : code === "user_banned" ? 403 : 500;
+      const status = code.startsWith("telegram_") ? 401 : code === "user_banned" ? 403 : code === "faucet_cooldown" ? 409 : code === "forbidden" ? 403 : 500;
       console.error("PaidMX API error:", code);
-      return send(res, status, { ok: false, error: status === 401 || status === 403 ? code : "internal_error" });
+      return send(res, status, { ok: false, error: code });
     }
   }
 );

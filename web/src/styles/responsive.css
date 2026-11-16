@@ -1,0 +1,128 @@
+/* ---------- Desktop (default) ---------- */
+.mobile-nav {
+  display: none;
+}
+.sidebar {
+  display: flex;
+}
+
+/* ---------- Tablet / small desktop ---------- */
+@media (max-width: 1100px) {
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .quick-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .admin-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .view {
+    padding: 20px 24px 44px;
+  }
+}
+
+/* ---------- Mobile ---------- */
+@media (max-width: 900px) {
+  .sidebar {
+    display: none;
+  }
+  .app-main {
+    margin-left: 0;
+  }
+  .mobile-nav {
+    display: block;
+  }
+  .view {
+    padding: 18px 16px calc(var(--nav-h) + 28px + env(safe-area-inset-bottom));
+    max-width: none;
+  }
+  .top-header {
+    padding: 0 16px;
+    height: calc(var(--header-h) - 4px);
+  }
+  .header-title span {
+    display: none;
+  }
+  .header-title b {
+    font-size: 15px;
+  }
+  .header-profile b {
+    display: none;
+  }
+  .header-profile {
+    padding: 4px;
+  }
+  .toast-root {
+    bottom: calc(var(--nav-h) + 24px + env(safe-area-inset-bottom));
+  }
+  .balance-amount {
+    font-size: 34px;
+  }
+  .page-heading h1 {
+    font-size: 23px;
+  }
+}
+
+/* ---------- Small mobile ---------- */
+@media (max-width: 600px) {
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+  .quick-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+  .admin-grid {
+    grid-template-columns: 1fr;
+  }
+  .faucet-stats {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+  .faucet-amount {
+    font-size: 38px;
+  }
+  .task-card {
+    flex-wrap: wrap;
+    padding: 14px;
+  }
+  .task-actions {
+    width: 100%;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .task-reward {
+    font-size: 15px;
+  }
+  .balance-row {
+    min-width: 100%;
+  }
+  .balance-rows {
+    flex-direction: column;
+  }
+  .modal-panel {
+    padding: 20px;
+  }
+}
+
+/* ---------- Modal centered on larger screens ---------- */
+@media (min-width: 768px) {
+  .modal-root {
+    align-items: center;
+    padding: 24px;
+  }
+  .modal-panel {
+    border-radius: var(--radius-xl);
+    max-height: 84dvh;
+  }
+}
+
+/* ---------- Height safety ---------- */
+@media (max-height: 640px) {
+  .view {
+    padding-bottom: calc(var(--nav-h) + 20px + env(safe-area-inset-bottom));
+  }
+}
