@@ -3,7 +3,7 @@
 Project: `paidmx`
 
 ## Architecture
-- Stormkit: static frontend hosting only.
+- Static Telegram Mini App frontend: `web/` (deployable with Firebase Hosting or another static host).
 - Firebase Cloud Functions (Node.js 22): HTTPS API.
 - Cloud Firestore: only database.
 - Telegram Mini App: sends raw `Telegram.WebApp.initData` to the API.
@@ -35,7 +35,7 @@ The function validates Telegram initData (maximum age: 1 hour), creates/updates 
 - Store the OfferwallApi Secret Key with `firebase functions:secrets:set OFFERWALLAPI_SECRET`; never place it in frontend code.
 - The endpoint verifies `signature2` (HMAC-SHA256) and supports the legacy MD5 signature, ignores provider test callbacks, deduplicates by `transId`, and handles chargebacks idempotently.
 - Credits are written to `wallets/{telegramUserId}` as integer `balanceMicros` (1 PMX = 1,000,000 micros) with `debtMicros` for chargebacks that exceed the available balance. Every callback is recorded in `providerTransactions`.
-- This webhook is only the provider-to-server crediting foundation. The Telegram frontend, OfferwallApi feed/link launch, user-facing balance display, task catalog, and withdrawal RPCs still need migration before users can earn or withdraw in production.
+- This webhook is only the provider-to-server crediting foundation. The `web/` directory now contains a responsive Telegram Mini App dashboard, wallet overview, task placeholder, and referral screen. The frontend calls the authenticated `getDashboard` RPC. OfferwallApi feed/launch, real task catalog, transaction history, and withdrawal RPCs are still not implemented; do not enable earning/withdrawals in production yet.
 - Test callback URL with the provider's integration tester; test events are acknowledged but never credited.
 
 ## Local checks
@@ -57,3 +57,12 @@ The current frontend still uses the legacy Telegram Serverless RPC bridge; it mu
 
 ## Continuous integration
 GitHub Actions runs Node.js 22 syntax checks and the built-in test suite whenever backend files change on `main` or in a pull request. Telegram initData verification is isolated in `functions/lib/telegram-auth.js` and covered by tests for valid signatures, tampering, expired/future timestamps, malformed identities, and missing bot-token configuration.
+
+## Telegram Mini App frontend
+- Frontend source: `web/index.html`, `web/styles.css`, and `web/app.js`.
+- Public settings: edit `web/config.js` and set `botUsername` to the bot username without `@`. Never put bot tokens or provider secrets in this file.
+- Configure the Telegram bot domain with BotFather `/setdomain`, then set the Mini App URL/menu button to the deployed HTTPS frontend URL.
+- The frontend sends the raw `Telegram.WebApp.initData` in the `X-Telegram-Init-Data` header. The server verifies its signature and freshness; client-side `initDataUnsafe` is not trusted for authentication.
+- The referral link format is `https://t.me/<bot>?startapp=ref_<code>`. Referral attribution is accepted only on a user's first authenticated registration, resolved server-side through `referralCodes`, and recorded once in `referrals/{telegramUserId}`. Self-referrals and banned referrers are ignored. Referral count is tracked; monetary referral rewards are intentionally not enabled until a reward policy is configured.
+- Firebase Hosting is configured to serve the `web/` directory. After creating/enabling the Hosting site and setting `CORS_ORIGINS` to the exact deployed origin, deploy with `firebase deploy --project paidmx --only hosting`.
+- The frontend currently shows task and withdrawal sections as unavailable rather than pretending those backend systems are active.
