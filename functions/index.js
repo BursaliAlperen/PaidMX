@@ -11,7 +11,7 @@ const db = getFirestore();
 const BOT_TOKEN = defineSecret("BOT_TOKEN");
 const OFFERWALLAPI_SECRET = defineSecret("OFFERWALLAPI_SECRET");
 
-const ADMIN_IDS = new Set((process.env.ADMIN_IDS || "7904032877").split(",").map(v => v.trim()).filter(Boolean));
+const ADMIN_IDS = new Set((process.env.ADMIN_IDS || "").split(",").map(v => v.trim()).filter(Boolean));
 
 function offerwallFields(req) {
   if (req.body && typeof req.body === "object" && !Buffer.isBuffer(req.body)) {
