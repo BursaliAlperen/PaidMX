@@ -23,6 +23,6 @@ function verifyTelegramInitData(initData, botToken, nowSeconds = Math.floor(Date
   let user;
   try { user = JSON.parse(rawUser); } catch { throw new Error("telegram_user_invalid"); }
   if (!user || !Number.isSafeInteger(Number(user.id)) || Number(user.id) <= 0) throw new Error("telegram_user_invalid");
-  return { ...user, id: String(user.id), authDate };
+  return { ...user, id: String(user.id), authDate, startParam: String(params.get("start_param") || "").slice(0, 64) };
 }
 module.exports = { verifyTelegramInitData, MAX_INIT_DATA_AGE_SECONDS };
