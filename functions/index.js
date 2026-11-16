@@ -4,13 +4,13 @@ const { initializeApp } = require("firebase-admin/app");
 const { getFirestore, FieldValue } = require("firebase-admin/firestore");
 const crypto = require("node:crypto");
 const { parseRewardMicros, verifyOfferwallSignature } = require("./lib/offerwall-security");
+const { verifyTelegramInitData } = require("./lib/telegram-auth");
 
 initializeApp();
 const db = getFirestore();
 const BOT_TOKEN = defineSecret("BOT_TOKEN");
 const OFFERWALLAPI_SECRET = defineSecret("OFFERWALLAPI_SECRET");
 
-const MAX_INIT_DATA_AGE_SECONDS = 24 * 60 * 60;
 const ADMIN_IDS = new Set((process.env.ADMIN_IDS || "7904032877").split(",").map(v => v.trim()).filter(Boolean));
 
 function offerwallFields(req) {
@@ -156,35 +156,6 @@ function allowedOrigin(origin) {
   return !!origin && configured.includes(origin);
 }
 
-function verifyTelegramInitData(initData, botToken) {
-  if (typeof initData !== "string" || !initData || initData.length > 8192) {
-    throw new Error("telegram_auth_required");
-  }
-  const params = new URLSearchParams(initData);
-  const receivedHash = params.get("hash");
-  const authDate = Number(params.get("auth_date"));
-  if (!receivedHash || !Number.isInteger(authDate)) throw new Error("telegram_auth_invalid");
-  const now = Math.floor(Date.now() / 1000);
-  if (authDate > now + 60 || now - authDate > MAX_INIT_DATA_AGE_SECONDS) {
-    throw new Error("telegram_auth_expired");
-  }
-  params.delete("hash");
-  const dataCheckString = [...params.entries()]
-    .sort(([a], [b]) => a.localeCompare(b))
-    .map(([k, v]) => `${k}=${v}`).join("\n");
-  const secretKey = crypto.createHmac("sha256", "WebAppData").update(botToken).digest();
-  const calculated = crypto.createHmac("sha256", secretKey).update(dataCheckString).digest("hex");
-  const a = Buffer.from(calculated, "hex");
-  const b = Buffer.from(receivedHash, "hex");
-  if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) {
-    throw new Error("telegram_auth_invalid");
-  }
-  const rawUser = params.get("user");
-  if (!rawUser) throw new Error("telegram_user_missing");
-  const user = JSON.parse(rawUser);
-  if (!user || !Number.isSafeInteger(Number(user.id))) throw new Error("telegram_user_invalid");
-  return { ...user, id: String(user.id), authDate };
-}
 
 exports.api = onRequest(
   { region: "us-central1", secrets: [BOT_TOKEN, OFFERWALLAPI_SECRET], maxInstances: 20, timeoutSeconds: 30 },
@@ -215,6 +186,7 @@ exports.api = onRequest(
       await db.runTransaction(async tx => {
         const snap = await tx.get(userRef);
         const walletSnap = await tx.get(walletRef);
+        if (snap.exists && snap.data().banned === true) throw new Error("user_banned");
         const safeProfile = {
           telegramId: telegramUser.id,
           firstName: String(telegramUser.first_name || "").slice(0, 128),
@@ -249,9 +221,9 @@ exports.api = onRequest(
       return send(res, 501, { ok: false, error: "rpc_not_migrated", rpc });
     } catch (err) {
       const code = String(err?.message || "internal_error");
-      const status = code.startsWith("telegram_") ? 401 : 500;
+      const status = code.startsWith("telegram_") ? 401 : code === "user_banned" ? 403 : 500;
       console.error("PaidMX API error:", code);
-      return send(res, status, { ok: false, error: status === 401 ? code : "internal_error" });
+      return send(res, status, { ok: false, error: status === 401 || status === 403 ? code : "internal_error" });
     }
   }
 );
