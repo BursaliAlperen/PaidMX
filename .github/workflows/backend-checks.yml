@@ -5,6 +5,8 @@ on:
     branches: [main]
     paths:
       - "functions/**"
+      - "web/**"
+      - "firebase.json"
       - ".github/workflows/backend-checks.yml"
   pull_request:
     paths:
@@ -24,3 +26,4 @@ jobs:
           node-version: 22
       - run: npm install --ignore-scripts
       - run: npm run check
+      - run: node --check ../web/app.js
