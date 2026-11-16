@@ -46,7 +46,7 @@ From the `functions` directory, run `npm test` to execute the dependency-free No
 - Never put `BOT_TOKEN`, service-account private keys, or other secrets in Stormkit frontend variables or the browser bundle.
 - `apiKey` in the Firebase web config is a public client identifier, not an authorization control.
 - All balance, reward, game score, referral, task, promo, withdrawal, and admin operations must be validated server-side and use Firestore transactions/idempotency.
-- Admin UI visibility is not authorization. Every admin RPC must check Telegram user ID `7904032877` on the server.
+- Admin UI visibility is not authorization. Configure the comma-separated `ADMIN_IDS` server environment variable and check it on every admin RPC; the source code no longer contains a default administrator ID.
 
 ## Stormkit frontend variables
 After the backend RPC migration and deployment, set:
