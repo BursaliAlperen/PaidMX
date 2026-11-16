@@ -1,79 +1,77 @@
 <!doctype html>
 <html lang="tr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-  <meta name="theme-color" content="#0b1020">
-  <meta name="description" content="PaidMX Telegram ödül ve görev merkezi">
-  <title>PaidMX — Earn smarter</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./styles.css">
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <script src="./config.js"></script>
-  <script defer src="./app.js"></script>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#102c50"><meta name="description" content="PaidMX — Görevleri tamamla, ödüller kazan.">
+<title>PaidMX • Earn Hub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./styles.css"><script src="https://telegram.org/js/telegram-web-app.js"></script><script src="./config.js"></script><script defer src="./app.js"></script>
 </head>
 <body>
-  <div class="ambient ambient-a"></div><div class="ambient ambient-b"></div>
-  <div class="app-shell">
-    <header class="topbar">
-      <a class="brand" href="#" aria-label="PaidMX ana sayfa"><span class="brand-mark">P</span><span>paid<span class="brand-accent">mx</span></span></a>
-      <div class="top-actions"><span class="online-dot"></span><span class="online-label">LIVE</span><button class="avatar" id="avatar" aria-label="Profil">P</button></div>
-    </header>
+<div class="backdrop"><i></i><i></i><i></i></div>
+<div class="app">
+<header class="topbar"><a class="brand" href="#" data-tab="home"><span class="brand-symbol"><b></b><b></b><b></b></span><span>PAID<span>MX</span></span></a><div class="top-right"><span class="live"><i></i> LIVE</span><button class="profile" id="profile-avatar">P</button></div></header>
+<main>
+<section class="screen active" id="screen-home">
+<div class="greeting"><div><span class="kicker">YOUR EARNING SPACE</span><h1>Hoş geldin, <span id="first-name">PaidMX üyesi</span></h1><p>Bugün kazancını büyütmek için güzel bir gün.</p></div><span id="admin-pill" class="admin hidden">ADMIN</span></div>
+<div class="hero-balance"><div class="hero-orbit orbit-one"></div><div class="hero-orbit orbit-two"></div><div class="balance-head"><span>TOPLAM BAKİYE</span><span class="coin-tag"><i>◆</i> PMX</span></div><div class="balance-number" id="balance">— <small>PMX</small></div><div class="balance-bottom"><span><i class="status-dot"></i> Cüzdanın güncel</span><span id="debt-label"></span></div><div class="hero-watermark">P</div></div>
+<div class="quick-actions"><button data-tab="tasks"><span class="qa-icon task-qa">▤</span><b>Görev bul</b><small>Ödülleri keşfet</small></button><button data-tab="friends"><span class="qa-icon friend-qa">♧</span><b>Arkadaş davet et</b><small>Birlikte büyü</small></button><button data-tab="wallet"><span class="qa-icon wallet-qa">◈</span><b>Cüzdan</b><small>Bakiyeni gör</small></button></div>
+<div class="section-title"><div><span class="kicker">START EARNING</span><h2>Kazanç fırsatları</h2></div><button class="text-link" data-tab="tasks">Tümünü gör <b>↗</b></button></div>
+<button class="featured-task" data-tab="tasks"><div class="featured-glow"></div><div class="featured-top"><span class="featured-icon">✦</span><span class="featured-badge">ANA KAZANÇ ALANI</span></div><div class="featured-copy"><h3>Görevleri tamamla</h3><p>Anketler, uygulamalar, kayıt teklifleri ve daha fazlası.</p></div><span class="featured-arrow">→</span><div class="featured-foot"><span>DAHA FAZLA GÖREV</span><span>Keşfet ↗</span></div></button>
+<div class="section-title compact"><div><span class="kicker">YOUR ACTIVITY</span><h2>Hesap özeti</h2></div></div>
+<div class="stats-grid"><article class="stat"><span class="stat-icon cyan">♧</span><div><small>Davet edilen</small><strong id="ref-count">0</strong></div></article><article class="stat"><span class="stat-icon green">↗</span><div><small>Referans kazancı</small><strong id="ref-earnings">0 PMX</strong></div></article><article class="stat"><span class="stat-icon violet">◈</span><div><small>Kullanılabilir bakiye</small><strong id="home-wallet">— PMX</strong></div></article><article class="stat"><span class="stat-icon amber">◷</span><div><small>Bekleyen kesinti</small><strong id="home-debt">0 PMX</strong></div></article></div>
+<div class="notice"><span>ⓘ</span><p>Görev ödülleri, sağlayıcı doğrulaması tamamlandıktan sonra hesabına yansıtılır.</p></div>
+</section>
 
-    <main>
-      <section class="welcome-row">
-        <div><p class="eyebrow">KAZANÇ MERKEZİ</p><h1>Merhaba, <span id="first-name">PaidMX üyesi</span> 👋</h1><p class="muted">Bugün küçük adımlarla daha fazla kazan.</p></div>
-        <span id="admin-pill" class="admin-pill hidden">ADMIN</span>
-      </section>
+<section class="screen" id="screen-tasks">
+<div class="page-heading"><span class="kicker">EARN MORE</span><h1>Görev merkezi</h1><p>PaidMX'te ana kazanç noktası burası. Sana uygun fırsatı seç.</p></div>
+<div class="task-hero"><div><span class="featured-badge">ÖNCELİKLİ KAZANÇ</span><h2>Görev yap,<br>ödülünü kazan.</h2><p>Offerwall ve görev ortaklarından gelen fırsatlar tek yerde.</p></div><div class="task-hero-art">✦</div></div>
+<div class="filter-row"><button class="filter active" data-filter="all">Tümü</button><button class="filter" data-filter="offer">Offerwall</button><button class="filter" data-filter="survey">Anket</button><button class="filter" data-filter="quick">Hızlı görev</button></div>
+<div class="provider-card"><div class="provider-logo">O</div><div class="provider-info"><b>Offerwall görevleri</b><span>Uygulama, oyun, kayıt ve diğer teklifler</span><small>Sağlayıcı bağlantısı bekleniyor</small></div><span class="provider-state">YAKINDA</span></div>
+<div class="provider-card"><div class="provider-logo survey-logo">▤</div><div class="provider-info"><b>Anketler</b><span>Profiline uygun anketleri tamamla</span><small>Anket sağlayıcısı henüz bağlanmadı</small></div><span class="provider-state">YAKINDA</span></div>
+<div class="provider-card"><div class="provider-logo quick-logo">⚡</div><div class="provider-info"><b>Hızlı görevler</b><span>Küçük ve kısa süreli görevler</span><small>Görev sistemi hazırlanıyor</small></div><span class="provider-state">YAKINDA</span></div>
+<div class="provider-card"><div class="provider-logo video-logo">▶</div><div class="provider-info"><b>İçerik & PTC</b><span>İzin verilen reklam ve içerik görevleri</span><small>Reklam sağlayıcısı henüz bağlanmadı</small></div><span class="provider-state">YAKINDA</span></div>
+<div class="safe-note"><b>✓ Güvenli ödül sistemi</b><p>Ödül, yalnızca sağlayıcıdan doğrulanmış callback geldiğinde eklenir. Sahte tamamlandı bildirimi bakiye oluşturmaz.</p></div>
+</section>
 
-      <section class="balance-card">
-        <div class="balance-top"><span class="balance-label">TOPLAM BAKİYE</span><span class="currency-pill"><span class="coin-dot">P</span> PMX</span></div>
-        <div class="balance-value" id="balance">— <small>PMX</small></div>
-        <div class="balance-foot"><span><i class="tiny-dot"></i> Cüzdanın senkronize</span><span id="debt-label" class="debt-label"></span></div>
-        <div class="balance-decoration">P</div>
-      </section>
+<section class="screen" id="screen-friends">
+<div class="page-heading"><span class="kicker">GROW TOGETHER</span><h1>Arkadaşlar</h1><p>Davet bağlantını paylaş, PaidMX topluluğunu büyüt.</p></div>
+<div class="referral-hero"><div class="ref-visual">♧</div><span class="featured-badge">YOUR INVITE LINK</span><h2>Birlikte daha güçlüyüz.</h2><p>Arkadaşlarını davet et. Katılımları burada takip et.</p><div class="ref-link"><span id="ref-link">Bağlantı hazırlanıyor…</span><button id="copy-ref" aria-label="Kopyala">▢</button></div><button id="share-ref" class="share-button"><span>➤</span> Telegram'da paylaş</button></div>
+<div class="ref-stats"><article><small>TOPLAM DAVET</small><strong id="invite-total">0</strong><span>Katılan arkadaş</span></article><article><small>REFERANS KAZANCI</small><strong id="invite-earned">0 PMX</strong><span>Toplam birikim</span></article></div>
+<div class="section-title"><div><span class="kicker">YOUR NETWORK</span><h2>Davet listen</h2></div></div><div class="empty-list"><div>♧</div><b>Henüz davetin yok</b><p>Bağlantını arkadaşlarınla paylaş. Yeni katılımlar burada görünecek.</p></div>
+<div class="safe-note"><b>Referans ödülleri hakkında</b><p>Bu sürümde davet sayısı takip edilir. Otomatik referans bonusu ve çok seviyeli komisyon, ödül kuralları tanımlanıp backend'e eklendikten sonra etkinleştirilecek.</p></div>
+</section>
 
-      <section class="quick-stats">
-        <article class="stat-card"><span class="stat-icon purple">↗</span><div><strong id="ref-count">0</strong><span>Davet edilen</span></div></article>
-        <article class="stat-card"><span class="stat-icon green">✦</span><div><strong id="ref-earnings">0</strong><span>Referans kazancı</span></div></article>
-        <article class="stat-card"><span class="stat-icon blue">◷</span><div><strong>7/24</strong><span>Görev erişimi</span></div></article>
-      </section>
+<section class="screen" id="screen-contest">
+<div class="page-heading"><span class="kicker">COMPETE & WIN</span><h1>Yarışmalar</h1><p>Topluluk etkinlikleri ve dönemsel sıralamalar.</p></div>
+<div class="contest-banner"><span class="contest-cup">♜</span><span class="featured-badge">COMING SOON</span><h2>Bir sonraki şampiyon<br>sen olabilirsin.</h2><p>Görevlerden kazandığın başarılarla liderlik tablosunda yerini al.</p></div>
+<div class="empty-list"><div>🏆</div><b>Aktif yarışma bulunmuyor</b><p>Yarışma takvimi ve ödül havuzları duyurulduğunda burada yayınlanacak.</p></div>
+</section>
 
-      <section class="section-block" id="home-panel">
-        <div class="section-heading"><div><p class="eyebrow">KEŞFET</p><h2>Kazanmaya başla</h2></div><span class="section-tag">PAIDMX</span></div>
-        <div class="feature-grid">
-          <button class="feature-card feature-primary" data-tab="tasks"><span class="feature-icon">▣</span><span class="feature-title">Görevler</span><span class="feature-copy">Ödül fırsatlarını keşfet</span><span class="feature-arrow">↗</span></button>
-          <button class="feature-card feature-secondary" data-tab="invite"><span class="feature-icon">♧</span><span class="feature-title">Arkadaşını davet et</span><span class="feature-copy">Referans ağını büyüt</span><span class="feature-arrow">↗</span></button>
-        </div>
-      </section>
+<section class="screen" id="screen-games">
+<div class="page-heading"><span class="kicker">PLAY FOR FUN</span><h1>Mini oyunlar</h1><p>Biraz mola ver. Oyunlar eğlence içindir; ana kazanç görevlerde.</p></div>
+<div class="game-disclaimer"><span>🎮</span><div><b>Eğlence alanı</b><p>Oyun ödülleri sınırlı tutulur. Büyük kazanç fırsatları için Görevler bölümüne göz at.</p></div></div>
+<div class="game-card game-tic"><div class="game-art">×<i>○</i></div><div class="game-content"><span class="game-label">STRATEJİ • 1-2 OYUNCU</span><h2>XO Arena</h2><p>Üç taşı sırala, mini mücadeleyi kazan.</p><span class="game-status">OYUN MODÜLÜ YAKINDA</span></div></div>
+<div class="game-card game-memory"><div class="game-art">▧</div><div class="game-content"><span class="game-label">HAFIZA • KARTLAR</span><h2>Memory Flip</h2><p>Eşleşen kartları bul ve hafızanı test et.</p><span class="game-status">OYUN MODÜLÜ YAKINDA</span></div></div>
+<div class="game-card game-wheel"><div class="game-art">◉</div><div class="game-content"><span class="game-label">ŞANS • GÜNLÜK</span><h2>Daily Spin</h2><p>Günlük ücretsiz dönüş mekanizması.</p><span class="game-status">OYUN MODÜLÜ YAKINDA</span></div></div>
+<div class="game-footnote">Oyunlar aktif edildiğinde deneme limitleri, ödül tavanı ve sunucu taraflı sonuç doğrulaması uygulanacak.</div>
+</section>
 
-      <section class="section-block panel hidden" id="tasks-panel">
-        <div class="section-heading"><div><p class="eyebrow">ÖDÜL ALANI</p><h2>Görev merkezi</h2></div><span class="section-tag">YAKINDA</span></div>
-        <div class="empty-state"><div class="empty-icon">✦</div><h3>Görev sistemi hazırlanıyor</h3><p>Offerwall ve görev sağlayıcıları güvenli şekilde bağlandığında aktif görevler burada listelenecek. Şu anda tamamlanmamış görev için bakiye yazılmaz.</p></div>
-      </section>
-
-      <section class="section-block panel hidden" id="invite-panel">
-        <div class="section-heading"><div><p class="eyebrow">BİRLİKTE BÜYÜYELİM</p><h2>Referans programı</h2></div><span class="section-tag">INVITE</span></div>
-        <div class="invite-card"><div class="invite-art">♧</div><h3>Arkadaşlarını PaidMX'e getir</h3><p>Özel davet bağlantını paylaş. Kaydolan arkadaşların referans listenize güvenli şekilde eklensin.</p><div class="ref-link-box"><span id="ref-link">Bağlantı hazırlanıyor…</span><button id="copy-ref" class="copy-btn" aria-label="Bağlantıyı kopyala">⧉</button></div><button id="share-ref" class="primary-btn">Davet bağlantısını paylaş <span>↗</span></button><p class="fine-print">Referans bakiyesi/ödül oranı yönetici tarafından etkinleştirildiğinde gösterilir. Şimdilik davet kayıtları sayılır.</p></div>
-        <div class="ref-summary"><div><span>Toplam davet</span><strong id="invite-total">0</strong></div><div><span>Referans ödülü</span><strong id="invite-earned">0 PMX</strong></div></div>
-      </section>
-
-      <section class="section-block panel hidden" id="wallet-panel">
-        <div class="section-heading"><div><p class="eyebrow">FİNANS</p><h2>Cüzdanım</h2></div><span class="section-tag">PMX</span></div>
-        <div class="wallet-panel"><div class="wallet-line"><span>Kullanılabilir bakiye</span><strong id="wallet-balance">— PMX</strong></div><div class="wallet-line"><span>Bekleyen borç/iadeler</span><strong id="wallet-debt">— PMX</strong></div><div class="wallet-note">Para çekme ve işlem geçmişi, ödeme sistemi tamamlandığında burada açılacak. Bu sürümde henüz çekim talebi alınmıyor.</div></div>
-      </section>
-    </main>
-
-    <nav class="bottom-nav" aria-label="Ana gezinme">
-      <button class="nav-item active" data-tab="home"><span>⌂</span><small>Ana sayfa</small></button>
-      <button class="nav-item" data-tab="tasks"><span>▦</span><small>Görevler</small></button>
-      <button class="nav-item" data-tab="invite"><span>♧</span><small>Davet</small></button>
-      <button class="nav-item" data-tab="wallet"><span>◈</span><small>Cüzdan</small></button>
-    </nav>
-  </div>
-  <div id="toast" class="toast" role="status" aria-live="polite"></div>
-  <div id="auth-error" class="auth-error hidden"><div class="error-mark">!</div><h2>Telegram bağlantısı gerekli</h2><p id="auth-error-text">PaidMX'i Telegram botunun Mini App butonundan açmalısın.</p><a id="open-bot" class="primary-btn hidden" href="#">Telegram'da aç</a></div>
-</body>
-</html>
+<section class="screen" id="screen-wallet">
+<div class="page-heading"><span class="kicker">YOUR MONEY</span><h1>Cüzdan</h1><p>Bakiyeni ve hesap durumunu görüntüle.</p></div>
+<div class="wallet-hero"><small>TOPLAM BAKİYE</small><strong id="wallet-balance">— PMX</strong><span>PaidMX Wallet</span></div>
+<div class="wallet-details"><div><span>Kullanılabilir bakiye</span><b id="wallet-available">— PMX</b></div><div><span>Bekleyen borç / iadeler</span><b id="wallet-debt">— PMX</b></div><div><span>Hesap birimi</span><b>PMX</b></div></div>
+<div class="empty-list"><div>⇄</div><b>İşlem geçmişi henüz hazır değil</b><p>Para çekme ve işlem geçmişi backend entegrasyonu tamamlandığında açılacak. Şu an çekim talebi alınmıyor.</p></div>
+</section>
+</main>
+<nav class="bottom-nav">
+<button class="nav-item active" data-tab="home"><span>⌂</span><small>Ana sayfa</small></button>
+<button class="nav-item" data-tab="tasks"><span>▤</span><small>Görevler</small><i class="nav-hot"></i></button>
+<button class="nav-item" data-tab="friends"><span>♧</span><small>Friends</small></button>
+<button class="nav-item center-nav" data-tab="contest"><span>♜</span><small>Contest</small></button>
+<button class="nav-item" data-tab="games"><span>▣</span><small>Games</small></button>
+<button class="nav-item" data-tab="wallet"><span>◈</span><small>Cüzdan</small></button>
+</nav></div>
+<div id="toast" class="toast"></div><div id="auth-error" class="auth-screen hidden"><div class="auth-mark">P</div><h2>PaidMX'e bağlanamadık</h2><p id="auth-error-text">Uygulamayı Telegram botunun içinden açmalısın.</p><a id="open-bot" class="share-button hidden" href="#">Telegram'da aç</a></div>
+</body></html>
