@@ -183,26 +183,81 @@ exports.api = onRequest(
       // Create/update the Telegram identity only after cryptographic initData validation.
       const userRef = db.collection("users").doc(telegramUser.id);
       const walletRef = db.collection("wallets").doc(telegramUser.id);
+      const generatedReferralCode = crypto.randomBytes(6).toString("hex");
+      const referralMatch = /^ref_([A-Za-z0-9_-]{6,20})$/.exec(telegramUser.startParam || "");
+      const incomingReferralCode = referralMatch ? referralMatch[1] : null;
+
       await db.runTransaction(async tx => {
         const snap = await tx.get(userRef);
         const walletSnap = await tx.get(walletRef);
         if (snap.exists && snap.data().banned === true) throw new Error("user_banned");
+
+        const existingProfile = snap.exists ? snap.data() : {};
+        const referralCode = String(existingProfile.referralCode || generatedReferralCode);
+        const ownCodeRef = db.collection("referralCodes").doc(referralCode);
+        const ownCodeSnap = await tx.get(ownCodeRef);
+
+        let incomingCodeSnap = null;
+        let referrerSnap = null;
+        let referrerRef = null;
+        if (!snap.exists && incomingReferralCode) {
+          const incomingCodeRef = db.collection("referralCodes").doc(incomingReferralCode);
+          incomingCodeSnap = await tx.get(incomingCodeRef);
+          if (incomingCodeSnap.exists) {
+            const referrerId = String(incomingCodeSnap.data().userId || "");
+            if (referrerId && referrerId !== telegramUser.id) {
+              referrerRef = db.collection("users").doc(referrerId);
+              referrerSnap = await tx.get(referrerRef);
+            }
+          }
+        }
+
+        if (ownCodeSnap.exists && String(ownCodeSnap.data().userId) !== telegramUser.id) {
+          throw new Error("referral_code_conflict");
+        }
+
         const safeProfile = {
           telegramId: telegramUser.id,
           firstName: String(telegramUser.first_name || "").slice(0, 128),
           username: String(telegramUser.username || "").slice(0, 64),
           photoUrl: String(telegramUser.photo_url || "").slice(0, 2048),
+          referralCode,
           lastSeenAt: FieldValue.serverTimestamp(),
           updatedAt: FieldValue.serverTimestamp()
         };
+
         if (!snap.exists) {
           tx.create(userRef, {
             ...safeProfile, balanceGr: 0, playsTotal: 0, banned: false,
+            referralCount: 0, referralEarningsMicros: 0,
             lang: "tr", createdAt: FieldValue.serverTimestamp()
           });
         } else {
           tx.set(userRef, safeProfile, { merge: true });
         }
+
+        if (!ownCodeSnap.exists) {
+          tx.create(ownCodeRef, {
+            userId: telegramUser.id,
+            createdAt: FieldValue.serverTimestamp()
+          });
+        }
+
+        if (!snap.exists && incomingCodeSnap?.exists && referrerSnap?.exists &&
+            referrerSnap.data().banned !== true) {
+          const referralRef = db.collection("referrals").doc(telegramUser.id);
+          tx.create(referralRef, {
+            referredUserId: telegramUser.id,
+            referrerId: String(incomingCodeSnap.data().userId),
+            referralCode: incomingReferralCode,
+            createdAt: FieldValue.serverTimestamp()
+          });
+          tx.set(referrerRef, {
+            referralCount: FieldValue.increment(1),
+            updatedAt: FieldValue.serverTimestamp()
+          }, { merge: true });
+        }
+
         if (!walletSnap.exists) {
           tx.create(walletRef, {
             balanceMicros: 0, debtMicros: 0, currency: "PMX",
@@ -212,8 +267,28 @@ exports.api = onRequest(
         }
       });
 
-      if (rpc === "authCheck") {
-        return send(res, 200, { ok: true, user: { id: telegramUser.id }, admin: ADMIN_IDS.has(telegramUser.id) });
+      if (rpc === "authCheck" || rpc === "getDashboard") {
+        const [profileSnap, walletSnap] = await Promise.all([userRef.get(), walletRef.get()]);
+        const profile = profileSnap.data() || {};
+        const wallet = walletSnap.data() || {};
+        return send(res, 200, {
+          ok: true,
+          user: {
+            id: telegramUser.id,
+            firstName: String(profile.firstName || ""),
+            username: String(profile.username || ""),
+            photoUrl: String(profile.photoUrl || ""),
+            referralCode: String(profile.referralCode || ""),
+            referralCount: Number(profile.referralCount || 0),
+            referralEarningsMicros: Number(profile.referralEarningsMicros || 0)
+          },
+          wallet: {
+            balanceMicros: Number(wallet.balanceMicros || 0),
+            debtMicros: Number(wallet.debtMicros || 0),
+            currency: "PMX"
+          },
+          admin: ADMIN_IDS.has(telegramUser.id)
+        });
       }
 
       // Remaining legacy RPCs are deliberately not stubbed with fake success.
