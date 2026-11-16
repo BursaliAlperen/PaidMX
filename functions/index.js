@@ -90,14 +90,48 @@ async function handleOfferwallApiPostback(req, res) {
       const eventSnap = await tx.get(eventRef);
       if (eventSnap.exists) {
         const existing = eventSnap.data();
-        if (existing.state === "credited" || existing.state === "reversed" ||
-            existing.state === "reversed_before_credit") return;
-        throw new Error("transaction_state_conflict");
+        if (existing.state === "reversed" || existing.state === "reversed_before_credit") return;
+        if (status === "1") return; // Duplicate credit delivery.
+        if (status !== "2" || existing.state !== "credited") {
+          throw new Error("transaction_state_conflict");
+        }
+
+        const walletSnap = await tx.get(walletRef);
+        if (!walletSnap.exists) throw new Error("user_wallet_not_found");
+        const wallet = walletSnap.data();
+        const balance = Number(wallet.balanceMicros || 0);
+        const debt = Number(wallet.debtMicros || 0);
+        if (!Number.isSafeInteger(balance) || !Number.isSafeInteger(debt) || balance < 0 || debt < 0) {
+          throw new Error("wallet_state_invalid");
+        }
+        const debit = Math.min(balance, Number(existing.rewardMicros));
+        const debtAdded = Number(existing.rewardMicros) - debit;
+        tx.set(walletRef, {
+          balanceMicros: balance - debit,
+          debtMicros: debt + debtAdded,
+          currency: "PMX",
+          updatedAt: FieldValue.serverTimestamp()
+        }, { merge: true });
+        tx.update(eventRef, {
+          state: "reversed", status: 2, debitedMicros: debit,
+          debtAddedMicros: debtAdded, reversedAt: FieldValue.serverTimestamp()
+        });
+        return;
+      }
+
+      // A reversal can arrive before its original credit. Record it so a delayed
+      // original callback cannot create spendable funds later.
+      if (status === "2") {
+        tx.create(eventRef, {
+          provider: "offerwallapi", transId, userId: subId, rewardMicros,
+          status: 2, state: "reversed_before_credit",
+          createdAt: FieldValue.serverTimestamp()
+        });
+        return;
       }
 
       const walletSnap = await tx.get(walletRef);
       if (!walletSnap.exists) throw new Error("user_wallet_not_found");
-
       const wallet = walletSnap.data();
       const balance = Number(wallet.balanceMicros || 0);
       const debt = Number(wallet.debtMicros || 0);
@@ -105,39 +139,23 @@ async function handleOfferwallApiPostback(req, res) {
         throw new Error("wallet_state_invalid");
       }
 
-      if (status === "1") {
-        const debtPaid = Math.min(debt, rewardMicros);
-        const availableCredit = rewardMicros - debtPaid;
-        tx.set(walletRef, {
-          balanceMicros: balance + availableCredit,
-          debtMicros: debt - debtPaid,
-          currency: "PMX",
-          updatedAt: FieldValue.serverTimestamp()
-        }, { merge: true });
-        tx.create(eventRef, {
-          provider: "offerwallapi", transId, userId: subId, rewardMicros,
-          creditedMicros: availableCredit, debtPaidMicros: debtPaid,
-          status: 1, state: "credited", offerType: String(p.offer_type || "offer").slice(0, 32),
-          offerName: String(p.offer_name || "").slice(0, 160),
-          payoutUsd: String(p.payout || "").slice(0, 32),
-          country: String(p.country || "").slice(0, 2),
-          createdAt: FieldValue.serverTimestamp()
-        });
-      } else {
-        const debit = Math.min(balance, rewardMicros);
-        const newDebt = debt + (rewardMicros - debit);
-        tx.set(walletRef, {
-          balanceMicros: balance - debit,
-          debtMicros: newDebt,
-          currency: "PMX",
-          updatedAt: FieldValue.serverTimestamp()
-        }, { merge: true });
-        tx.create(eventRef, {
-          provider: "offerwallapi", transId, userId: subId, rewardMicros,
-          debitedMicros: debit, debtAddedMicros: rewardMicros - debit,
-          status: 2, state: "reversed", createdAt: FieldValue.serverTimestamp()
-        });
-      }
+      const debtPaid = Math.min(debt, rewardMicros);
+      const availableCredit = rewardMicros - debtPaid;
+      tx.set(walletRef, {
+        balanceMicros: balance + availableCredit,
+        debtMicros: debt - debtPaid,
+        currency: "PMX",
+        updatedAt: FieldValue.serverTimestamp()
+      }, { merge: true });
+      tx.create(eventRef, {
+        provider: "offerwallapi", transId, userId: subId, rewardMicros,
+        creditedMicros: availableCredit, debtPaidMicros: debtPaid,
+        status: 1, state: "credited", offerType: String(p.offer_type || "offer").slice(0, 32),
+        offerName: String(p.offer_name || "").slice(0, 160),
+        payoutUsd: String(p.payout || "").slice(0, 32),
+        country: String(p.country || "").slice(0, 2),
+        createdAt: FieldValue.serverTimestamp()
+      });
     });
     return res.status(200).type("text/plain").send("ok");
   } catch (err) {
