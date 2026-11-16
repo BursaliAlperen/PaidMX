@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+  <meta name="theme-color" content="#0b1020">
+  <meta name="description" content="PaidMX Telegram ödül ve görev merkezi">
+  <title>PaidMX — Earn smarter</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./styles.css">
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <script src="./config.js"></script>
+  <script defer src="./app.js"></script>
+</head>
+<body>
+  <div class="ambient ambient-a"></div><div class="ambient ambient-b"></div>
+  <div class="app-shell">
+    <header class="topbar">
+      <a class="brand" href="#" aria-label="PaidMX ana sayfa"><span class="brand-mark">P</span><span>paid<span class="brand-accent">mx</span></span></a>
+      <div class="top-actions"><span class="online-dot"></span><span class="online-label">LIVE</span><button class="avatar" id="avatar" aria-label="Profil">P</button></div>
+    </header>
+
+    <main>
+      <section class="welcome-row">
+        <div><p class="eyebrow">KAZANÇ MERKEZİ</p><h1>Merhaba, <span id="first-name">PaidMX üyesi</span> 👋</h1><p class="muted">Bugün küçük adımlarla daha fazla kazan.</p></div>
+        <span id="admin-pill" class="admin-pill hidden">ADMIN</span>
+      </section>
+
+      <section class="balance-card">
+        <div class="balance-top"><span class="balance-label">TOPLAM BAKİYE</span><span class="currency-pill"><span class="coin-dot">P</span> PMX</span></div>
+        <div class="balance-value" id="balance">— <small>PMX</small></div>
+        <div class="balance-foot"><span><i class="tiny-dot"></i> Cüzdanın senkronize</span><span id="debt-label" class="debt-label"></span></div>
+        <div class="balance-decoration">P</div>
+      </section>
+
+      <section class="quick-stats">
+        <article class="stat-card"><span class="stat-icon purple">↗</span><div><strong id="ref-count">0</strong><span>Davet edilen</span></div></article>
+        <article class="stat-card"><span class="stat-icon green">✦</span><div><strong id="ref-earnings">0</strong><span>Referans kazancı</span></div></article>
+        <article class="stat-card"><span class="stat-icon blue">◷</span><div><strong>7/24</strong><span>Görev erişimi</span></div></article>
+      </section>
+
+      <section class="section-block" id="home-panel">
+        <div class="section-heading"><div><p class="eyebrow">KEŞFET</p><h2>Kazanmaya başla</h2></div><span class="section-tag">PAIDMX</span></div>
+        <div class="feature-grid">
+          <button class="feature-card feature-primary" data-tab="tasks"><span class="feature-icon">▣</span><span class="feature-title">Görevler</span><span class="feature-copy">Ödül fırsatlarını keşfet</span><span class="feature-arrow">↗</span></button>
+          <button class="feature-card feature-secondary" data-tab="invite"><span class="feature-icon">♧</span><span class="feature-title">Arkadaşını davet et</span><span class="feature-copy">Referans ağını büyüt</span><span class="feature-arrow">↗</span></button>
+        </div>
+      </section>
+
+      <section class="section-block panel hidden" id="tasks-panel">
+        <div class="section-heading"><div><p class="eyebrow">ÖDÜL ALANI</p><h2>Görev merkezi</h2></div><span class="section-tag">YAKINDA</span></div>
+        <div class="empty-state"><div class="empty-icon">✦</div><h3>Görev sistemi hazırlanıyor</h3><p>Offerwall ve görev sağlayıcıları güvenli şekilde bağlandığında aktif görevler burada listelenecek. Şu anda tamamlanmamış görev için bakiye yazılmaz.</p></div>
+      </section>
+
+      <section class="section-block panel hidden" id="invite-panel">
+        <div class="section-heading"><div><p class="eyebrow">BİRLİKTE BÜYÜYELİM</p><h2>Referans programı</h2></div><span class="section-tag">INVITE</span></div>
+        <div class="invite-card"><div class="invite-art">♧</div><h3>Arkadaşlarını PaidMX'e getir</h3><p>Özel davet bağlantını paylaş. Kaydolan arkadaşların referans listenize güvenli şekilde eklensin.</p><div class="ref-link-box"><span id="ref-link">Bağlantı hazırlanıyor…</span><button id="copy-ref" class="copy-btn" aria-label="Bağlantıyı kopyala">⧉</button></div><button id="share-ref" class="primary-btn">Davet bağlantısını paylaş <span>↗</span></button><p class="fine-print">Referans bakiyesi/ödül oranı yönetici tarafından etkinleştirildiğinde gösterilir. Şimdilik davet kayıtları sayılır.</p></div>
+        <div class="ref-summary"><div><span>Toplam davet</span><strong id="invite-total">0</strong></div><div><span>Referans ödülü</span><strong id="invite-earned">0 PMX</strong></div></div>
+      </section>
+
+      <section class="section-block panel hidden" id="wallet-panel">
+        <div class="section-heading"><div><p class="eyebrow">FİNANS</p><h2>Cüzdanım</h2></div><span class="section-tag">PMX</span></div>
+        <div class="wallet-panel"><div class="wallet-line"><span>Kullanılabilir bakiye</span><strong id="wallet-balance">— PMX</strong></div><div class="wallet-line"><span>Bekleyen borç/iadeler</span><strong id="wallet-debt">— PMX</strong></div><div class="wallet-note">Para çekme ve işlem geçmişi, ödeme sistemi tamamlandığında burada açılacak. Bu sürümde henüz çekim talebi alınmıyor.</div></div>
+      </section>
+    </main>
+
+    <nav class="bottom-nav" aria-label="Ana gezinme">
+      <button class="nav-item active" data-tab="home"><span>⌂</span><small>Ana sayfa</small></button>
+      <button class="nav-item" data-tab="tasks"><span>▦</span><small>Görevler</small></button>
+      <button class="nav-item" data-tab="invite"><span>♧</span><small>Davet</small></button>
+      <button class="nav-item" data-tab="wallet"><span>◈</span><small>Cüzdan</small></button>
+    </nav>
+  </div>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <div id="auth-error" class="auth-error hidden"><div class="error-mark">!</div><h2>Telegram bağlantısı gerekli</h2><p id="auth-error-text">PaidMX'i Telegram botunun Mini App butonundan açmalısın.</p><a id="open-bot" class="primary-btn hidden" href="#">Telegram'da aç</a></div>
+</body>
+</html>
