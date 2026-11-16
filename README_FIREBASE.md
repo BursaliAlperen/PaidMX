@@ -28,7 +28,18 @@ After deployment in `us-central1`:
 - Authenticated POST requests must include `X-Telegram-Init-Data: <Telegram.WebApp.initData>`.
 - JSON request shape: `{ "rpc": "methodName", "payload": { ... } }`.
 
-The function currently validates Telegram initData, creates/updates the Telegram user profile transactionally, and exposes an `authCheck` handshake. Other RPC methods intentionally return `501 rpc_not_migrated`; no fake success responses are returned.
+The function validates Telegram initData, creates/updates the Telegram user profile transactionally, and exposes an `authCheck` handshake. Other RPC methods intentionally return `501 rpc_not_migrated`; no fake success responses are returned.
+
+### OfferwallApi rewards (backend foundation)
+- Configure the provider postback URL as `https://us-central1-paidmx.cloudfunctions.net/api/offerwallapi/postback`.
+- Store the OfferwallApi Secret Key with `firebase functions:secrets:set OFFERWALLAPI_SECRET`; never place it in frontend code.
+- The endpoint verifies `signature2` (HMAC-SHA256) and supports the legacy MD5 signature, ignores provider test callbacks, deduplicates by `transId`, and handles chargebacks idempotently.
+- Credits are written to `wallets/{telegramUserId}` as integer `balanceMicros` (1 PMX = 1,000,000 micros) with `debtMicros` for chargebacks that exceed the available balance. Every callback is recorded in `providerTransactions`.
+- This webhook is only the provider-to-server crediting foundation. The Telegram frontend, OfferwallApi feed/link launch, user-facing balance display, task catalog, and withdrawal RPCs still need migration before users can earn or withdraw in production.
+- Test callback URL with the provider's integration tester; test events are acknowledged but never credited.
+
+## Local checks
+From the `functions` directory, run `npm test` to execute the dependency-free Node.js test suite, or `npm run check` to run syntax checks and tests together. The OfferwallApi helper tests cover integer reward conversion, invalid decimal rejection, HMAC-SHA256 verification, legacy MD5 compatibility, and tampered signatures. Firestore transaction and provider sandbox tests are still required before production.
 
 ## Security
 - Firestore client reads and writes are denied globally. Cloud Functions use the Admin SDK.
