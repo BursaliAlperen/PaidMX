@@ -8,7 +8,7 @@ const token = "123456:unit-test-token";
 const now = 1800000000;
 
 function signedInitData(authDate = now, user = { id: 42, first_name: "Test" }) {
-  const values = new URLSearchParams({ auth_date: String(authDate), query_id: "AAE-test", user: JSON.stringify(user) });
+  const values = new URLSearchParams({ auth_date: String(authDate), query_id: "AAE-test", start_param: "ref_abcdef123456", user: JSON.stringify(user) });
   const check = [...values.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([k, v]) => k + "=" + v).join("\n");
   const secret = crypto.createHmac("sha256", "WebAppData").update(token).digest();
   values.set("hash", crypto.createHmac("sha256", secret).update(check).digest("hex"));
@@ -19,6 +19,7 @@ test("accepts valid Telegram initData and normalizes user ID", () => {
   const user = verifyTelegramInitData(signedInitData(), token, now);
   assert.equal(user.id, "42");
   assert.equal(user.first_name, "Test");
+  assert.equal(user.startParam, "ref_abcdef123456");
 });
 test("rejects modified initData", () => {
   const values = new URLSearchParams(signedInitData());
