@@ -8,7 +8,9 @@
   "scripts": {
     "serve": "firebase emulators:start --only functions,firestore",
     "deploy": "firebase deploy --only functions,firestore:rules",
-    "logs": "firebase functions:log"
+    "logs": "firebase functions:log",
+    "test": "node --test",
+    "check": "node --check index.js && node --check lib/offerwall-security.js && npm test"
   },
   "dependencies": {
     "firebase-admin": "^13.0.0",
