@@ -207,8 +207,7 @@ exports.api = onRequest(
     try {
       const initData = req.get("X-Telegram-Init-Data") || req.body?.initData;
       const telegramUser = verifyTelegramInitData(initData, BOT_TOKEN.value());
-      const rpc = String(req.body?.rpc || "");
-      const payload = req.body?.payload && typeof req.body.payload === "object" ? req.body.payload : {};
+      const rpc = String(req.body?.rpc || "").slice(0, 64);
 
       // Create/update the Telegram identity only after cryptographic initData validation.
       const userRef = db.collection("users").doc(telegramUser.id);
