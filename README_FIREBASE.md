@@ -28,7 +28,7 @@ After deployment in `us-central1`:
 - Authenticated POST requests must include `X-Telegram-Init-Data: <Telegram.WebApp.initData>`.
 - JSON request shape: `{ "rpc": "methodName", "payload": { ... } }`.
 
-The function validates Telegram initData, creates/updates the Telegram user profile transactionally, and exposes an `authCheck` handshake. Other RPC methods intentionally return `501 rpc_not_migrated`; no fake success responses are returned.
+The function validates Telegram initData (maximum age: 1 hour), creates/updates the Telegram user profile transactionally, rejects accounts marked `banned`, and exposes an `authCheck` handshake. Other RPC methods intentionally return `501 rpc_not_migrated`; no fake success responses are returned.
 
 ### OfferwallApi rewards (backend foundation)
 - Configure the provider postback URL as `https://us-central1-paidmx.cloudfunctions.net/api/offerwallapi/postback`.
@@ -54,3 +54,6 @@ After the backend RPC migration and deployment, set:
 VITE_API_URL=https://us-central1-paidmx.cloudfunctions.net/api
 ```
 The current frontend still uses the legacy Telegram Serverless RPC bridge; it must be migrated to `fetch(VITE_API_URL)` before production cutover.
+
+## Continuous integration
+GitHub Actions runs Node.js 22 syntax checks and the built-in test suite whenever backend files change on `main` or in a pull request. Telegram initData verification is isolated in `functions/lib/telegram-auth.js` and covered by tests for valid signatures, tampering, expired/future timestamps, malformed identities, and missing bot-token configuration.
