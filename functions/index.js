@@ -10,6 +10,8 @@ initializeApp();
 const db = getFirestore();
 const BOT_TOKEN = defineSecret("BOT_TOKEN");
 const OFFERWALLAPI_SECRET = defineSecret("OFFERWALLAPI_SECRET");
+const OFFERWALLAPI_KEY = defineSecret("OFFERWALLAPI_KEY");
+const OFFERWALLAPI_BEARER = defineSecret("OFFERWALLAPI_BEARER");
 
 const ADMIN_IDS = new Set((process.env.ADMIN_IDS || "").split(",").map(v => v.trim()).filter(Boolean));
 
@@ -157,8 +159,32 @@ function allowedOrigin(origin) {
 }
 
 
+async function fetchQuickTasks(userId, userIp) {
+  const apiKey = OFFERWALLAPI_KEY.value();
+  const bearer = OFFERWALLAPI_BEARER.value();
+  if (!apiKey || !bearer) throw new Error("offerwall_credentials_missing");
+  const ip = /^\\d{1,3}(?:\\.\\d{1,3}){3}$/.test(userIp) ? userIp : "0.0.0.0";
+  const feeds = [["ptc", "ptc-api"], ["video", "video-api"], ["shortlink", "sl-api"]];
+  const results = await Promise.all(feeds.map(async ([type, endpoint]) => {
+    const url = "https://offerwallapi.com/" + endpoint + "/" + encodeURIComponent(apiKey) + "/" + encodeURIComponent(userId) + "/" + ip;
+    const response = await fetch(url, { headers: { Authorization: "Bearer " + bearer, Accept: "application/json" }, signal: AbortSignal.timeout(10000) });
+    if (!response.ok) throw new Error("offerwall_feed_http_" + response.status);
+    const body = await response.json();
+    if (String(body.status) !== "200" || !Array.isArray(body.data)) return [];
+    return body.data.map(item => ({ ...item, type }));
+  }));
+  const blocked = /install|download|deposit|make a purchase|purchase|register|sign.?up|trial|subscription|yükle|indir|yatır|satın al|kayıt ol/i;
+  return results.flat().filter(item => {
+    const text = String(item.title || "") + " " + String(item.description || "");
+    const duration = Number(item.duration || 0);
+    if (blocked.test(text) || !["ptc", "video", "shortlink"].includes(item.type)) return false;
+    if (item.type !== "shortlink" && (!Number.isFinite(duration) || duration < 1 || duration > 180)) return false;
+    try { const target = new URL(String(item.url || "")); return target.protocol === "https:" && target.hostname === "offerwallapi.com"; } catch { return false; }
+  }).slice(0, 100);
+}
+
 exports.api = onRequest(
-  { region: "us-central1", secrets: [BOT_TOKEN, OFFERWALLAPI_SECRET], maxInstances: 20, timeoutSeconds: 30 },
+  { region: "us-central1", secrets: [BOT_TOKEN, OFFERWALLAPI_SECRET, OFFERWALLAPI_KEY, OFFERWALLAPI_BEARER], maxInstances: 20, timeoutSeconds: 30 },
   async (req, res) => {
     const origin = req.get("origin");
     if (origin && allowedOrigin(origin)) {
@@ -266,6 +292,13 @@ exports.api = onRequest(
           });
         }
       });
+
+      if (rpc === "getQuickTasks") {
+        const forwarded = String(req.get("x-forwarded-for") || "").split(",")[0].trim();
+        const remoteIp = String(req.ip || forwarded || "").replace(/^::ffff:/, "");
+        const tasks = await fetchQuickTasks(telegramUser.id, remoteIp);
+        return send(res, 200, { ok: true, tasks });
+      }
 
       if (rpc === "authCheck" || rpc === "getDashboard") {
         const [profileSnap, walletSnap] = await Promise.all([userRef.get(), walletRef.get()]);
