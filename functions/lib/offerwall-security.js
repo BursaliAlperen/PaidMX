@@ -11,7 +11,7 @@ function constantTimeHexEqual(expected, supplied) {
 
 function parseRewardMicros(value) {
   const raw = String(value ?? "");
-  if (!/^(?:0|[1-9]\\d{0,11})(?:\\.\\d{1,6})?$/.test(raw)) {
+  if (!/^(?:0|[1-9]\d{0,11})(?:\.\d{1,6})?$/.test(raw)) {
     throw new Error("invalid_reward");
   }
   const [whole, fraction = ""] = raw.split(".");
