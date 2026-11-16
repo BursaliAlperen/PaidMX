@@ -66,3 +66,21 @@ GitHub Actions runs Node.js 22 syntax checks and the built-in test suite wheneve
 - The referral link format is `https://t.me/<bot>?startapp=ref_<code>`. Referral attribution is accepted only on a user's first authenticated registration, resolved server-side through `referralCodes`, and recorded once in `referrals/{telegramUserId}`. Self-referrals and banned referrers are ignored. Referral count is tracked; monetary referral rewards are intentionally not enabled until a reward policy is configured.
 - Firebase Hosting is configured to serve the `web/` directory. After creating/enabling the Hosting site and setting `CORS_ORIGINS` to the exact deployed origin, deploy with `firebase deploy --project paidmx --only hosting`.
 - The frontend currently shows task and withdrawal sections as unavailable rather than pretending those backend systems are active.
+
+
+## OfferwallApi kısa görev akışı
+
+PaidMX'in kendi görev kartları OfferwallApi REST feed'lerinden veri alır. Şu an yalnızca kısa süreli PTC reklamları (en fazla 180 saniye), video izleme ve shortlink görevleri gösterilir. Uygulama indirme/yükleme, kayıt, deneme, abonelik ve para yatırma ifadeleri içeren kampanyalar filtrelenir. Uzun/kanıt gerektiren Microtasks ve yüksek değerli Offers feed'i bu kısa görev ekranına dahil değildir.
+
+API Key ve Bearer Token yalnızca Firebase Functions Secret Manager'da tutulmalıdır; web/config.js içine yazılmamalıdır:
+
+```bash
+firebase functions:secrets:set OFFERWALLAPI_KEY
+firebase functions:secrets:set OFFERWALLAPI_BEARER
+firebase functions:secrets:set OFFERWALLAPI_SECRET
+firebase deploy --only functions
+```
+
+OfferwallApi panelindeki API Key, Bearer Token ve Secret Key değerlerini ilgili komutlar sorunca gir. API Key ve Bearer Token görev akışını; Secret Key ise doğrulanmış S2S ödül postback'lerini kullanır. Web arayüzü `getQuickTasks` RPC'siyle görevleri alır; görev URL'leri sağlayıcı tarafından oluşturulur ve kullanıcı kimliği URL'ye önceden eklenmiştir. Ödül yalnızca imzası doğrulanmış postback ile cüzdana işlenir.
+
+Kampanya metni filtreleri ek bir korumadır; sağlayıcının kampanya açıklamalarını her zaman doğru sınıflandıracağını garanti etmez. Panelden uygulama indirme, kayıt, satın alma, deneme ve depozitolu kampanya kategorilerini ayrıca kapat.
