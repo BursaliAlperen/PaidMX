@@ -38,6 +38,9 @@ The function validates Telegram initData, creates/updates the Telegram user prof
 - This webhook is only the provider-to-server crediting foundation. The Telegram frontend, OfferwallApi feed/link launch, user-facing balance display, task catalog, and withdrawal RPCs still need migration before users can earn or withdraw in production.
 - Test callback URL with the provider's integration tester; test events are acknowledged but never credited.
 
+## Local checks
+From the `functions` directory, run `npm test` to execute the dependency-free Node.js test suite, or `npm run check` to run syntax checks and tests together. The OfferwallApi helper tests cover integer reward conversion, invalid decimal rejection, HMAC-SHA256 verification, legacy MD5 compatibility, and tampered signatures. Firestore transaction and provider sandbox tests are still required before production.
+
 ## Security
 - Firestore client reads and writes are denied globally. Cloud Functions use the Admin SDK.
 - Never put `BOT_TOKEN`, service-account private keys, or other secrets in Stormkit frontend variables or the browser bundle.
