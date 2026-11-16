@@ -21,7 +21,7 @@ function constantTimeHexEqual(expected, supplied) {
 
 function parseRewardMicros(value) {
   const raw = String(value ?? "");
-  if (!/^(?:0|[1-9]\\d{0,11})(?:\\.\\d{1,6})?$/.test(raw)) {
+  if (!/^(?:0|[1-9]\d{0,11})(?:\.\d{1,6})?$/.test(raw)) {
     throw new Error("invalid_reward");
   }
   const [whole, fraction = ""] = raw.split(".");
@@ -51,7 +51,7 @@ async function handleOfferwallApiPostback(req, res) {
   const signature = String(p.signature || "");
   const secret = OFFERWALLAPI_SECRET.value();
 
-  if (!/^\\d{1,20}$/.test(subId) || !transId || transId.length > 200 ||
+  if (!/^\d{1,20}$/.test(subId) || !transId || transId.length > 200 ||
       !["1", "2"].includes(status)) {
     return send(res, 400, { ok: false, error: "invalid_postback" });
   }
@@ -233,8 +233,10 @@ exports.api = onRequest(
 
       // Create/update the Telegram identity only after cryptographic initData validation.
       const userRef = db.collection("users").doc(telegramUser.id);
+      const walletRef = db.collection("wallets").doc(telegramUser.id);
       await db.runTransaction(async tx => {
         const snap = await tx.get(userRef);
+        const walletSnap = await tx.get(walletRef);
         const safeProfile = {
           telegramId: telegramUser.id,
           firstName: String(telegramUser.first_name || "").slice(0, 128),
@@ -250,6 +252,13 @@ exports.api = onRequest(
           });
         } else {
           tx.set(userRef, safeProfile, { merge: true });
+        }
+        if (!walletSnap.exists) {
+          tx.create(walletRef, {
+            balanceMicros: 0, debtMicros: 0, currency: "PMX",
+            createdAt: FieldValue.serverTimestamp(),
+            updatedAt: FieldValue.serverTimestamp()
+          });
         }
       });
 
